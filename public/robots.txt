@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /test
+
+Sitemap: https://yoursite.com/sitemap.xml
+
+# Allow crawling of main pages
+Allow: /products/
+Allow: /products
+
+# Block admin and test pages
+Disallow: /admin
+Disallow: /test 

@@ -1,0 +1,277 @@
+---
+// Check authentication
+const isAuthenticated = Astro.cookies.get('admin_auth')?.value === 'authenticated';
+if (!isAuthenticated) {
+  return Astro.redirect('/admin');
+}
+
+let results = null;
+let error = null;
+
+if (Astro.request.method === 'POST') {
+  const formData = await Astro.request.formData();
+  const urlsText = formData.get('urls') as string;
+  
+  if (!urlsText || !urlsText.trim()) {
+    error = 'Please enter at least one Amazon URL';
+  } else {
+    try {
+      // Split URLs by line breaks and filter out empty lines
+      const urls = urlsText
+        .split('\n')
+        .map(url => url.trim())
+        .filter(url => url.length > 0);
+      
+      if (urls.length === 0) {
+        error = 'No valid URLs found';
+      } else {
+        results = {
+          total: urls.length,
+          processed: 0,
+          successful: 0,
+          failed: 0,
+          urls: urls,
+          message: `Ready to process ${urls.length} URL${urls.length === 1 ? '' : 's'}`
+        };
+      }
+    } catch (err) {
+      error = 'Error processing URLs: ' + String(err);
+    }
+  }
+}
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bulk Add Products - Admin Dashboard</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #eee;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      min-height: 200px;
+      font-family: monospace;
+    }
+    .btn {
+      background: #007bff;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      margin-right: 10px;
+    }
+    .btn:hover {
+      background: #0056b3;
+    }
+    .btn-secondary {
+      background: #6c757d;
+    }
+    .btn-secondary:hover {
+      background: #545b62;
+    }
+    .error {
+      color: #dc3545;
+      background: #f8d7da;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      border: 1px solid #f5c6cb;
+    }
+    .success {
+      color: #155724;
+      background: #d4edda;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      border: 1px solid #c3e6cb;
+    }
+    .warning {
+      color: #856404;
+      background: #fff3cd;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      border: 1px solid #ffeaa7;
+    }
+    .url-preview {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 4px;
+      margin-top: 20px;
+    }
+    .url-list {
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 10px;
+    }
+    .url-item {
+      padding: 5px 0;
+      border-bottom: 1px solid #eee;
+      font-family: monospace;
+      font-size: 12px;
+    }
+    .help-text {
+      font-size: 14px;
+      color: #666;
+      margin-top: 5px;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+    .stat-card {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 4px;
+      text-align: center;
+      border: 1px solid #dee2e6;
+    }
+    .stat-number {
+      font-size: 24px;
+      font-weight: bold;
+      color: #007bff;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>📦 Bulk Add Products</h1>
+      <div>
+        <a href="/admin" class="btn btn-secondary">Back to Dashboard</a>
+        <a href="/admin/add-product" class="btn">Single Product</a>
+      </div>
+    </div>
+
+    <div class="warning">
+      <strong>Note:</strong> Bulk processing functionality is being developed. Currently showing URL parsing and validation.
+    </div>
+
+    {error && (
+      <div class="error">
+        <strong>Error:</strong> {error}
+      </div>
+    )}
+
+    {results && (
+      <div class="success">
+        <strong>URLs Parsed Successfully!</strong> {results.message}
+        
+        <div class="stats">
+          <div class="stat-card">
+            <div class="stat-number">{results.total}</div>
+            <div class="stat-label">Total URLs</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">{results.urls.filter(url => url.includes('amazon')).length}</div>
+            <div class="stat-label">Amazon URLs</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">{results.urls.filter(url => !url.includes('amazon')).length}</div>
+            <div class="stat-label">Other URLs</div>
+          </div>
+        </div>
+
+        <div class="url-preview">
+          <h3>URLs to Process:</h3>
+          <div class="url-list">
+            {results.urls.map((url, index) => (
+              <div class="url-item">
+                {index + 1}. {url}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    )}
+
+    <form method="POST">
+      <div class="form-group">
+        <label for="urls">Amazon Product URLs (one per line):</label>
+        <textarea 
+          id="urls" 
+          name="urls" 
+          required 
+          placeholder="https://www.amazon.com/dp/B123456789
+https://www.amazon.com/dp/B987654321
+https://amazon.com/gp/product/B555666777
+
+Paste one URL per line..."
+        ></textarea>
+        <div class="help-text">
+          Enter multiple Amazon URLs, one per line. Empty lines will be ignored. 
+          The system will process each URL to extract ASINs, generate content, and add to your product catalog.
+        </div>
+      </div>
+
+      <button type="submit" class="btn">Parse URLs</button>
+    </form>
+
+    <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee;">
+      <h3>Bulk Processing Workflow:</h3>
+      <ol>
+        <li><strong>URL Validation:</strong> Check that URLs are valid Amazon product links</li>
+        <li><strong>ASIN Extraction:</strong> Extract product identifiers from each URL</li>
+        <li><strong>Content Generation:</strong> Generate titles and descriptions for each product</li>
+        <li><strong>Affiliate Conversion:</strong> Convert to affiliate URLs with your tag</li>
+        <li><strong>Batch Import:</strong> Add all products to Airtable in one operation</li>
+      </ol>
+      
+      <p><strong>Coming Soon:</strong></p>
+      <ul>
+        <li>Real-time processing with progress indicators</li>
+        <li>Error handling for individual URLs</li>
+        <li>Retry failed URLs</li>
+        <li>Duplicate detection</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html> 

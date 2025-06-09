@@ -1,0 +1,344 @@
+---
+// Check authentication
+const isAuthenticated = Astro.cookies.get('admin_auth')?.value === 'authenticated';
+if (!isAuthenticated) {
+  return Astro.redirect('/admin');
+}
+
+let result = null;
+let error = null;
+
+if (Astro.request.method === 'POST') {
+  const formData = await Astro.request.formData();
+  const amazonUrl = formData.get('amazon_url') as string;
+  
+  if (!amazonUrl || !amazonUrl.trim()) {
+    error = 'Please enter an Amazon URL';
+  } else {
+    try {
+      // Simple ASIN extraction (inline logic)
+      let asin = null;
+      const asinPatterns = [
+        /\/dp\/([A-Z0-9]{10})/,
+        /\/gp\/product\/([A-Z0-9]{10})/,
+        /\/product\/([A-Z0-9]{10})/,
+        /asin=([A-Z0-9]{10})/i
+      ];
+      
+      for (const pattern of asinPatterns) {
+        const match = amazonUrl.match(pattern);
+        if (match) {
+          asin = match[1];
+          break;
+        }
+      }
+      
+      if (!asin) {
+        error = 'Could not extract ASIN from URL. Please check the Amazon URL format.';
+      } else {
+        // Create affiliate URL (inline logic)
+        const affiliateTag = import.meta.env.AFFILIATE_TAG || 'yourtag-20';
+        const affiliateUrl = `https://www.amazon.com/dp/${asin}?tag=${affiliateTag}`;
+        
+        // Generate AI content using OpenAI
+        let productContent;
+        try {
+          // Import the content generation function
+          const { generateProductContent } = await import('../../lib/content');
+          productContent = await generateProductContent(asin);
+        } catch (contentError) {
+          console.warn('Content generation failed, using fallback:', contentError);
+          productContent = {
+            title: `Product ${asin}`,
+            description: 'Product description could not be generated. Please add manually.',
+            slug: `product-${asin.toLowerCase()}`
+          };
+        }
+
+        // Save to Airtable
+        let airtableResult;
+        try {
+          const { createProduct } = await import('../../lib/airtable');
+          airtableResult = await createProduct({
+            title: productContent.title,
+            description: productContent.description,
+            affiliateUrl: affiliateUrl,
+            imageUrl: `https://images-na.ssl-images-amazon.com/images/P/${asin}.01.L.jpg` // Amazon image URL
+          });
+          
+          result = {
+            asin: asin,
+            originalUrl: amazonUrl,
+            affiliateUrl: affiliateUrl,
+            title: productContent.title,
+            description: productContent.description,
+            slug: productContent.slug,
+            airtableId: airtableResult.id,
+            message: '✅ Product successfully added to catalog!',
+            saved: true
+          };
+        } catch (airtableError) {
+          console.warn('Airtable save failed:', airtableError);
+          result = {
+            asin: asin,
+            originalUrl: amazonUrl,
+            affiliateUrl: affiliateUrl,
+            title: productContent.title,
+            description: productContent.description,
+            slug: productContent.slug,
+            message: '⚠️ Product processed but not saved to Airtable. Check your API configuration.',
+            saved: false,
+            airtableError: String(airtableError)
+          };
+        }
+      }
+    } catch (err) {
+      error = 'Error processing URL: ' + String(err);
+    }
+  }
+}
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Product - Admin Dashboard</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #eee;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input[type="url"] {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    .btn {
+      background: #007bff;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      margin-right: 10px;
+      font-size: 16px;
+    }
+    .btn:hover {
+      background: #0056b3;
+    }
+    .btn-secondary {
+      background: #6c757d;
+    }
+    .btn-secondary:hover {
+      background: #545b62;
+    }
+    .error {
+      color: #dc3545;
+      background: #f8d7da;
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      border: 1px solid #f5c6cb;
+    }
+    .success {
+      color: #155724;
+      background: #d4edda;
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      border: 1px solid #c3e6cb;
+    }
+    .info {
+      color: #0c5460;
+      background: #d1ecf1;
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      border: 1px solid #bee5eb;
+    }
+    .help-text {
+      font-size: 14px;
+      color: #666;
+      margin-top: 5px;
+    }
+    .product-preview {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 4px;
+      margin-top: 20px;
+      border: 1px solid #dee2e6;
+    }
+    .detail-row {
+      display: flex;
+      margin-bottom: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .detail-label {
+      font-weight: bold;
+      width: 120px;
+      color: #666;
+    }
+    .detail-value {
+      flex: 1;
+      font-family: monospace;
+      font-size: 14px;
+      word-break: break-all;
+    }
+    .workflow-steps {
+      background: #fff3cd;
+      padding: 20px;
+      border-radius: 4px;
+      margin-top: 30px;
+      border: 1px solid #ffeaa7;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>➕ Add Single Product</h1>
+      <div>
+        <a href="/admin" class="btn btn-secondary">Back to Dashboard</a>
+        <a href="/admin/bulk-add" class="btn">Bulk Add</a>
+      </div>
+    </div>
+
+    <div class="info">
+      <strong>AI-Powered Product Addition</strong><br>
+      This form extracts ASINs, creates affiliate URLs, and generates titles and descriptions using OpenAI.
+      {import.meta.env.OPENAI_API_KEY ? '🤖 AI content generation is enabled!' : '⚠️ Add OPENAI_API_KEY to enable AI content generation.'}
+    </div>
+
+    {error && (
+      <div class="error">
+        <strong>Error:</strong> {error}
+      </div>
+    )}
+
+    {result && (
+      <div class="success">
+        <strong>✅ Product Processed Successfully!</strong> {result.message}
+        
+        <div class="product-preview">
+          <h3>Product Details:</h3>
+          <div class="detail-row">
+            <div class="detail-label">ASIN:</div>
+            <div class="detail-value">{result.asin}</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">Original URL:</div>
+            <div class="detail-value">{result.originalUrl}</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">Affiliate URL:</div>
+            <div class="detail-value">
+              <a href={result.affiliateUrl} target="_blank">{result.affiliateUrl}</a>
+            </div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">Title:</div>
+            <div class="detail-value">{result.title}</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">Description:</div>
+            <div class="detail-value">{result.description}</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">Slug:</div>
+            <div class="detail-value">{result.slug}</div>
+          </div>
+          {result.airtableId && (
+            <div class="detail-row">
+              <div class="detail-label">Airtable ID:</div>
+              <div class="detail-value">{result.airtableId}</div>
+            </div>
+          )}
+          {result.airtableError && (
+            <div class="detail-row">
+              <div class="detail-label">Save Error:</div>
+              <div class="detail-value" style="color: #dc3545;">{result.airtableError}</div>
+            </div>
+          )}
+        </div>
+      </div>
+    )}
+
+    <form method="POST">
+      <div class="form-group">
+        <label for="amazon_url">Amazon Product URL:</label>
+        <input 
+          type="url" 
+          id="amazon_url" 
+          name="amazon_url" 
+          required 
+          placeholder="https://www.amazon.com/dp/B123456789"
+          pattern="https?://.*amazon.*"
+        />
+        <div class="help-text">
+          Enter a valid Amazon product URL. Supported formats:
+          <ul>
+            <li>https://www.amazon.com/dp/B123456789</li>
+            <li>https://amazon.com/gp/product/B123456789</li>
+            <li>https://www.amazon.com/product-name/dp/B123456789</li>
+          </ul>
+        </div>
+      </div>
+
+      <button type="submit" class="btn">Process Product</button>
+    </form>
+
+    <div class="workflow-steps">
+      <h3>🔄 Current Workflow:</h3>
+      <ol>
+        <li><strong>✅ URL Validation:</strong> Check that the URL is a valid Amazon product link</li>
+        <li><strong>✅ ASIN Extraction:</strong> Extract the product identifier from the URL</li>
+        <li><strong>✅ Affiliate URL Creation:</strong> Generate affiliate URL with your tag</li>
+        <li><strong>✅ AI Content Generation:</strong> Generate compelling title and description using OpenAI</li>
+        <li><strong>✅ Slug Generation:</strong> Create SEO-friendly URL slug from title</li>
+        <li><strong>✅ Airtable Storage:</strong> Save product to your catalog with auto-generated slug</li>
+      </ol>
+      
+      <p><strong>Enhancement Ideas:</strong></p>
+      <ul>
+        <li>Add duplicate detection before saving</li>
+        <li>Implement image URL extraction from Amazon</li>
+        <li>Add product category classification</li>
+        <li>Implement bulk processing with progress tracking</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html> 

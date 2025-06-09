@@ -1,0 +1,314 @@
+---
+// Test page to verify all utility functions
+import { runAllTests, testContentGeneration } from '../lib/test-utilities.js';
+
+// Get the affiliate tag from environment
+const affiliateTag = import.meta.env.AFFILIATE_TAG || 'test-tag-20';
+
+// Run tests on the server side
+console.log('Running server-side tests...');
+runAllTests();
+
+// Test content generation if OpenAI key is available
+if (import.meta.env.OPENAI_API_KEY) {
+  console.log('\nTesting content generation...');
+  await testContentGeneration();
+} else {
+  console.log('\nSkipping content generation test (no OpenAI API key)');
+}
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Utility Tests - Affiliate Storefront</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+      line-height: 1.6;
+    }
+    .test-section {
+      background: #f5f5f5;
+      padding: 1rem;
+      border-radius: 8px;
+      margin: 1rem 0;
+    }
+    .success { color: #22c55e; }
+    .error { color: #ef4444; }
+    code {
+      background: #e5e5e5;
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+    .button {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 0.5rem 0;
+    }
+    .button:hover {
+      background: #2563eb;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧪 Affiliate Storefront - Utility Tests</h1>
+  
+  <p>This page tests all the utility functions for the affiliate storefront. Check the browser console and server logs for detailed test results.</p>
+  
+  <div class="test-section">
+    <h2>✅ Server-Side Tests</h2>
+    <p>All server-side tests have been executed. Check the terminal/console where you started the dev server to see the results.</p>
+  </div>
+  
+  <div class="test-section">
+    <h2>🔗 Client-Side URL Testing</h2>
+    <p>Test Amazon URL processing in the browser:</p>
+    
+    <input type="text" id="testUrl" placeholder="Enter Amazon URL..." style="width: 100%; padding: 0.5rem; margin: 0.5rem 0;">
+    <button class="button" onclick="testUrl()">Test URL</button>
+    
+    <div id="urlResult" style="margin-top: 1rem;"></div>
+  </div>
+  
+  <div class="test-section">
+    <h2>🔤 Slug Testing</h2>
+    <p>Test slug generation:</p>
+    
+    <input type="text" id="testTitle" placeholder="Enter product title..." style="width: 100%; padding: 0.5rem; margin: 0.5rem 0;">
+    <button class="button" onclick="testSlug()">Generate Slug</button>
+    
+    <div id="slugResult" style="margin-top: 1rem;"></div>
+  </div>
+  
+  <div class="test-section">
+    <h2>📦 Bulk URL Testing</h2>
+    <p>Test multiple URLs (one per line):</p>
+    
+    <textarea id="bulkUrls" placeholder="Enter URLs, one per line..." style="width: 100%; height: 100px; padding: 0.5rem; margin: 0.5rem 0;"></textarea>
+    <button class="button" onclick="testBulkUrls()">Test All URLs</button>
+    
+    <div id="bulkResult" style="margin-top: 1rem;"></div>
+  </div>
+
+  <div style="display: none;" id="affiliateTag">{affiliateTag}</div>
+  
+  <script>
+    // @ts-nocheck
+    // Get affiliate tag from hidden div
+    const getAffiliateTag = () => {
+      const tagElement = document.getElementById('affiliateTag');
+      return tagElement ? tagElement.textContent : 'test-tag-20';
+    };
+
+    // Amazon URL processing functions (inline for browser compatibility)
+    const ASIN_PATTERNS = [
+      /\/dp\/([A-Z0-9]{10})/i,
+      /\/gp\/product\/([A-Z0-9]{10})/i,
+      /\/[^\/]+\/dp\/([A-Z0-9]{10})/i,
+      /\/o\/([A-Z0-9]{10})/i,
+      /[?&]asin=([A-Z0-9]{10})/i,
+      /\/exec\/obidos\/ASIN\/([A-Z0-9]{10})/i,
+    ];
+
+    function extractASIN(url) {
+      if (!url || typeof url !== 'string') return null;
+      
+      for (const pattern of ASIN_PATTERNS) {
+        const match = url.match(pattern);
+        if (match && match[1]) {
+          const asin = match[1].toUpperCase();
+          if (/^[A-Z0-9]{10}$/.test(asin)) {
+            return asin;
+          }
+        }
+      }
+      return null;
+    }
+
+    function isAmazonURL(url) {
+      if (!url || typeof url !== 'string') return false;
+      try {
+        const urlObj = new URL(url);
+        const hostname = urlObj.hostname.toLowerCase();
+        return hostname.includes('amazon.com') || 
+               hostname.includes('amazon.') || 
+               hostname.includes('amzn.to') ||
+               hostname.includes('a.co');
+      } catch {
+        return false;
+      }
+    }
+
+    function createAffiliateURL(asin, affiliateTag) {
+      if (!asin || !/^[A-Z0-9]{10}$/.test(asin)) {
+        throw new Error('Invalid ASIN format');
+      }
+      if (!affiliateTag) {
+        throw new Error('Affiliate tag not provided');
+      }
+      return `https://www.amazon.com/dp/${asin}/?tag=${affiliateTag}`;
+    }
+
+    function processAmazonURL(url, affiliateTag) {
+      const asin = extractASIN(url);
+      if (!asin) return null;
+      
+      try {
+        const affiliateUrl = createAffiliateURL(asin, affiliateTag);
+        return { asin, affiliateUrl };
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function processMultipleAmazonURLs(urls, affiliateTag) {
+      return urls.map(url => {
+        const trimmedUrl = url.trim();
+        
+        if (!trimmedUrl) {
+          return {
+            originalUrl: url,
+            asin: null,
+            affiliateUrl: null,
+            success: false,
+            error: 'Empty URL'
+          };
+        }
+
+        if (!isAmazonURL(trimmedUrl)) {
+          return {
+            originalUrl: url,
+            asin: null,
+            affiliateUrl: null,
+            success: false,
+            error: 'Not an Amazon URL'
+          };
+        }
+
+        const result = processAmazonURL(trimmedUrl, affiliateTag);
+        
+        if (!result) {
+          return {
+            originalUrl: url,
+            asin: null,
+            affiliateUrl: null,
+            success: false,
+            error: 'Could not extract ASIN or create affiliate URL'
+          };
+        }
+
+        return {
+          originalUrl: url,
+          asin: result.asin,
+          affiliateUrl: result.affiliateUrl,
+          success: true
+        };
+      });
+    }
+
+    function generateSlug(text) {
+      return text
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .replace(/-+/g, '-')
+        .substring(0, 50)
+        .replace(/-+$/, '');
+    }
+
+    window.testUrl = function() {
+      const urlInput = document.getElementById('testUrl');
+      const resultDiv = document.getElementById('urlResult');
+      
+      if (!urlInput || !resultDiv) return;
+      
+      const url = urlInput.value;
+      
+      if (!url) {
+        resultDiv.innerHTML = '<p class="error">Please enter a URL</p>';
+        return;
+      }
+      
+      const isAmazon = isAmazonURL(url);
+      const asin = extractASIN(url);
+      
+      let html = `<h4>Results:</h4>`;
+      html += `<p><strong>Is Amazon URL:</strong> ${isAmazon ? '<span class="success">✅ Yes</span>' : '<span class="error">❌ No</span>'}</p>`;
+      html += `<p><strong>ASIN:</strong> ${asin ? `<code>${asin}</code>` : '<span class="error">Not found</span>'}</p>`;
+      
+      if (asin) {
+        try {
+          const affiliateUrl = createAffiliateURL(asin, getAffiliateTag());
+          html += `<p><strong>Affiliate URL:</strong> <code>${affiliateUrl}</code></p>`;
+        } catch (error) {
+          html += `<p><strong>Affiliate URL:</strong> <span class="error">Error: ${error.message}</span></p>`;
+        }
+      }
+      
+      resultDiv.innerHTML = html;
+    };
+
+    window.testSlug = function() {
+      const titleInput = document.getElementById('testTitle');
+      const resultDiv = document.getElementById('slugResult');
+      
+      if (!titleInput || !resultDiv) return;
+      
+      const title = titleInput.value;
+      
+      if (!title) {
+        resultDiv.innerHTML = '<p class="error">Please enter a title</p>';
+        return;
+      }
+      
+      const slug = generateSlug(title);
+      resultDiv.innerHTML = `<h4>Generated Slug:</h4><p><code>${slug}</code></p>`;
+    };
+
+    window.testBulkUrls = function() {
+      const urlsTextarea = document.getElementById('bulkUrls');
+      const resultDiv = document.getElementById('bulkResult');
+      
+      if (!urlsTextarea || !resultDiv) return;
+      
+      const urls = urlsTextarea.value.split('\n').filter(url => url.trim());
+      
+      if (urls.length === 0) {
+        resultDiv.innerHTML = '<p class="error">Please enter at least one URL</p>';
+        return;
+      }
+      
+      const results = processMultipleAmazonURLs(urls, getAffiliateTag());
+      
+      let html = `<h4>Bulk Processing Results (${results.filter(r => r.success).length}/${results.length} successful):</h4>`;
+      
+      results.forEach((result, index) => {
+        html += `<div style="margin: 1rem 0; padding: 0.5rem; background: white; border-radius: 4px;">`;
+        html += `<p><strong>${index + 1}.</strong> ${result.success ? '<span class="success">✅</span>' : '<span class="error">❌</span>'} <code>${result.originalUrl}</code></p>`;
+        
+        if (result.success) {
+          html += `<p style="margin-left: 1rem;"><strong>ASIN:</strong> <code>${result.asin}</code></p>`;
+          html += `<p style="margin-left: 1rem;"><strong>Affiliate URL:</strong> <code>${result.affiliateUrl}</code></p>`;
+        } else {
+          html += `<p style="margin-left: 1rem;"><strong>Error:</strong> <span class="error">${result.error}</span></p>`;
+        }
+        
+        html += `</div>`;
+      });
+      
+      resultDiv.innerHTML = html;
+    };
+  </script>
+</body>
+</html> 
