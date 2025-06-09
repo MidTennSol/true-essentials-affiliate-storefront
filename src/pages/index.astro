@@ -1,5 +1,6 @@
 ---
 // Home page - simple landing page for the affiliate storefront
+import Header from '../components/Header.astro';
 ---
 
 <!DOCTYPE html>
@@ -48,35 +49,7 @@
 			padding: 0 1rem;
 		}
 
-		header {
-			background: white;
-			box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-			padding: 1rem 0;
-		}
 
-		.header-content {
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-		}
-
-		.logo {
-			font-size: 1.5rem;
-			font-weight: bold;
-			color: #2563eb;
-			text-decoration: none;
-		}
-
-		nav a {
-			color: #666;
-			text-decoration: none;
-			margin-left: 2rem;
-			transition: color 0.2s;
-		}
-
-		nav a:hover {
-			color: #2563eb;
-		}
 
 		.hero {
 			text-align: center;
@@ -221,18 +194,7 @@
 	</style>
 </head>
 <body>
-	<header>
-		<div class="container">
-			<div class="header-content">
-				<a href="/" class="logo">True Essentials</a>
-				<nav>
-					<a href="/">Home</a>
-					<a href="/products">Products</a>
-					<a href="/test">Test</a>
-				</nav>
-			</div>
-		</div>
-	</header>
+	<Header />
 
 	<section class="hero">
 		<div class="container">

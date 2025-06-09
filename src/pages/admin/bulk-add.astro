@@ -1,5 +1,6 @@
 ---
 // Check authentication
+import Header from '../../components/Header.astro';
 const isAuthenticated = Astro.cookies.get('admin_auth')?.value === 'authenticated';
 if (!isAuthenticated) {
   return Astro.redirect('/admin');
@@ -51,8 +52,10 @@ if (Astro.request.method === 'POST') {
     body {
       font-family: system-ui, sans-serif;
       margin: 0;
-      padding: 20px;
       background: #f5f5f5;
+    }
+    .main-container {
+      padding: 20px;
     }
     .container {
       max-width: 1000px;
@@ -181,7 +184,9 @@ if (Astro.request.method === 'POST') {
   </style>
 </head>
 <body>
-  <div class="container">
+  <Header />
+  <div class="main-container">
+    <div class="container">
     <div class="header">
       <h1>📦 Bulk Add Products</h1>
       <div>
@@ -271,6 +276,7 @@ Paste one URL per line..."
         <li>Retry failed URLs</li>
         <li>Duplicate detection</li>
       </ul>
+    </div>
     </div>
   </div>
 </body>
