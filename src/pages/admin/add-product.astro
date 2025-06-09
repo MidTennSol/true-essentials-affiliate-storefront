@@ -55,6 +55,16 @@ if (Astro.request.method === 'POST') {
           };
         }
 
+        // Get product image URL
+        let imageUrl;
+        try {
+          const { getProductImageUrl } = await import('../../lib/amazon-scraper');
+          imageUrl = await getProductImageUrl(amazonUrl, asin, productContent.title);
+        } catch (imageError) {
+          console.warn('Image URL generation failed, using fallback:', imageError);
+          imageUrl = `https://m.media-amazon.com/images/I/${asin}.01._SL500_.jpg`; // Fallback
+        }
+
         // Save to Airtable
         let airtableResult;
         try {
@@ -63,7 +73,7 @@ if (Astro.request.method === 'POST') {
             title: productContent.title,
             description: productContent.description,
             affiliateUrl: affiliateUrl,
-            imageUrl: `https://images-na.ssl-images-amazon.com/images/P/${asin}.01.L.jpg` // Amazon image URL
+            imageUrl: imageUrl
           });
           
           result = {
@@ -73,6 +83,7 @@ if (Astro.request.method === 'POST') {
             title: productContent.title,
             description: productContent.description,
             slug: productContent.slug,
+            imageUrl: imageUrl,
             airtableId: airtableResult.id,
             message: '✅ Product successfully added to catalog!',
             saved: true
@@ -86,6 +97,7 @@ if (Astro.request.method === 'POST') {
             title: productContent.title,
             description: productContent.description,
             slug: productContent.slug,
+            imageUrl: imageUrl,
             message: '⚠️ Product processed but not saved to Airtable. Check your API configuration.',
             saved: false,
             airtableError: String(airtableError)
@@ -280,6 +292,16 @@ if (Astro.request.method === 'POST') {
             <div class="detail-label">Slug:</div>
             <div class="detail-value">{result.slug}</div>
           </div>
+          {result.imageUrl && (
+            <div class="detail-row">
+              <div class="detail-label">Image:</div>
+              <div class="detail-value">
+                <img src={result.imageUrl} alt={result.title} style="max-width: 200px; height: auto; border-radius: 4px; margin-top: 5px;" />
+                <br />
+                <small style="color: #666; font-size: 12px;">{result.imageUrl}</small>
+              </div>
+            </div>
+          )}
           {result.airtableId && (
             <div class="detail-row">
               <div class="detail-label">Airtable ID:</div>

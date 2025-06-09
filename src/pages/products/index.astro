@@ -301,18 +301,13 @@ try {
         <div class="products-grid">
           {products.map((product) => (
             <div class="product-card">
-              {product.fields['Image URL'] ? (
-                <img 
-                  src={product.fields['Image URL']} 
-                  alt={product.fields.Title}
-                  class="product-image"
-                  loading="lazy"
-                />
-              ) : (
-                <div class="product-image">
-                  📦 No Image Available
-                </div>
-              )}
+              <img 
+                src={product.fields['Image URL'] || `https://via.placeholder.com/400x400/e2e8f0/64748b?text=${encodeURIComponent('📦 ' + product.fields.Title.split(' ').slice(0, 2).join(' '))}`}
+                alt={product.fields.Title}
+                class="product-image"
+                loading="lazy"
+                onerror="this.onerror=null; this.src='https://via.placeholder.com/400x400/e2e8f0/64748b?text=' + encodeURIComponent('📦 Product');"
+              />
               
               <div class="product-content">
                 <h3 class="product-title">{product.fields.Title}</h3>
