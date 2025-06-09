@@ -1,6 +1,8 @@
 ---
 import { getProductBySlug, getAllProducts } from '../../lib/airtable.js';
 import type { AirtableProduct } from '../../lib/airtable.js';
+import Header from '../../components/Header.astro';
+import { generateImageUrlCandidates } from '../../lib/amazon-scraper.ts';
 
 export async function getStaticPaths() {
   try {
@@ -37,6 +39,15 @@ if (!product) {
 
 const pageTitle = `${product.fields.Title} - True Essentials`;
 const pageDescription = product.fields.Description.substring(0, 160) + '...';
+
+// Generate fallback image URLs if the main image URL doesn't work
+const extractASIN = (url: string) => {
+  const match = url.match(/\/dp\/([A-Z0-9]{10})/);
+  return match ? match[1] : null;
+};
+
+const asin = extractASIN(product.fields['Affiliate URL'] || '');
+const fallbackImageUrls = asin ? generateImageUrlCandidates(asin) : [];
 ---
 
 <!DOCTYPE html>
@@ -80,35 +91,8 @@ const pageDescription = product.fields.Description.substring(0, 160) + '...';
       padding: 0 1rem;
     }
 
-    header {
-      background: white;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      padding: 1rem 0;
-      margin-bottom: 2rem;
-    }
-
-    .header-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .logo {
-      font-size: 1.5rem;
-      font-weight: bold;
-      color: #2563eb;
-      text-decoration: none;
-    }
-
-    nav a {
-      color: #666;
-      text-decoration: none;
-      margin-left: 2rem;
-      transition: color 0.2s;
-    }
-
-    nav a:hover {
-      color: #2563eb;
+    main {
+      margin-top: 2rem;
     }
 
     .breadcrumb {
@@ -334,19 +318,8 @@ const pageDescription = product.fields.Description.substring(0, 160) + '...';
   </style>
 </head>
 <body>
-  <header>
-    <div class="container">
-      <div class="header-content">
-        <a href="/" class="logo">True Essentials</a>
-        <nav>
-          <a href="/">Home</a>
-          <a href="/products">Products</a>
-          <a href="/test">Test</a>
-        </nav>
-      </div>
-    </div>
-  </header>
-
+  <Header />
+  
   <main class="container">
     <div class="breadcrumb">
       <a href="/">Home</a>
@@ -359,18 +332,13 @@ const pageDescription = product.fields.Description.substring(0, 160) + '...';
     <div class="product-detail">
       <div class="product-layout">
         <div class="product-image-section">
-          {product.fields['Image URL'] ? (
-            <img 
-              src={product.fields['Image URL']} 
-              alt={product.fields.Title}
-              class="product-image"
-              loading="eager"
-            />
-          ) : (
-            <div class="product-image">
-              📦 No Image Available
-            </div>
-          )}
+          <img 
+            src={product.fields['Image URL'] || (fallbackImageUrls[0] || 'https://via.placeholder.com/400x400/e2e8f0/64748b?text=🍳+Kitchen+Item')}
+            alt={product.fields.Title}
+            class="product-image"
+            loading="eager"
+            onerror="this.src='https://via.placeholder.com/400x400/e2e8f0/64748b?text=🍳+Kitchen+Item'; this.onerror=null;"
+          />
         </div>
 
         <div class="product-info">

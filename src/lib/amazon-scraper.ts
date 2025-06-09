@@ -28,16 +28,27 @@ export function generateAmazonImageUrl(asin: string): string {
     return getPlaceholderImage('Product');
   }
 
-  // These are the most common patterns found by the scraper
-  const patterns = [
-    `https://m.media-amazon.com/images/I/${asin}._AC_SL500_.jpg`,
-    `https://images-na.ssl-images-amazon.com/images/P/${asin}.01._SL500_.jpg`,
-    `https://m.media-amazon.com/images/P/${asin}.01._SL500_.jpg`,
-    `https://images-na.ssl-images-amazon.com/images/I/${asin}._AC_SL500_.jpg`
-  ];
+  // Use the most reliable pattern that works for most products
+  // The _AC_SX355_ pattern tends to be more reliable than _AC_SL500_
+  return `https://m.media-amazon.com/images/I/${asin}._AC_SX355_.jpg`;
+}
 
-  // Return the first pattern (most commonly working)
-  return patterns[0];
+/**
+ * Get multiple image URL candidates for testing
+ */
+export function generateImageUrlCandidates(asin: string): string[] {
+  if (!asin || !/^[A-Z0-9]{10}$/.test(asin)) {
+    return [getPlaceholderImage('Product')];
+  }
+
+  // Return multiple patterns in order of reliability
+  return [
+    `https://m.media-amazon.com/images/I/${asin}._AC_SX355_.jpg`,
+    `https://m.media-amazon.com/images/I/${asin}._AC_SX342_.jpg`,
+    `https://images-na.ssl-images-amazon.com/images/I/${asin}._AC_SX355_.jpg`,
+    `https://m.media-amazon.com/images/I/${asin}._AC_SL500_.jpg`,
+    `https://images-na.ssl-images-amazon.com/images/P/${asin}.01._SL500_.jpg`
+  ];
 }
 
 /**
@@ -57,8 +68,8 @@ function getCategoryFromTitle(title: string): string {
   if (titleLower.includes('electronic') || titleLower.includes('resistor') || titleLower.includes('transistor')) {
     return '🔌 Electronics';
   }
-  if (titleLower.includes('kitchen') || titleLower.includes('gadget') || titleLower.includes('tool')) {
-    return '🔧 Tools & Gadgets';
+  if (titleLower.includes('kitchen') || titleLower.includes('gadget') || titleLower.includes('tool') || titleLower.includes('bundt') || titleLower.includes('nordic')) {
+    return '🍳 Kitchen & Tools';
   }
   if (titleLower.includes('climbing') || titleLower.includes('outdoor') || titleLower.includes('sport')) {
     return '🏃 Sports & Outdoors';
