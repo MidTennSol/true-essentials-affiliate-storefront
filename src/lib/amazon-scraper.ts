@@ -30,9 +30,10 @@ export function generateAmazonImageUrl(asin: string): string {
 
   // These are the most common patterns found by the scraper
   const patterns = [
-    `https://m.media-amazon.com/images/I/${asin}.01._SL500_.jpg`,
+    `https://m.media-amazon.com/images/I/${asin}._AC_SL500_.jpg`,
     `https://images-na.ssl-images-amazon.com/images/P/${asin}.01._SL500_.jpg`,
-    `https://m.media-amazon.com/images/P/${asin}.01._SL500_.jpg`
+    `https://m.media-amazon.com/images/P/${asin}.01._SL500_.jpg`,
+    `https://images-na.ssl-images-amazon.com/images/I/${asin}._AC_SL500_.jpg`
   ];
 
   // Return the first pattern (most commonly working)

@@ -43,15 +43,19 @@ if (Astro.request.method === 'POST') {
         // Generate AI content using OpenAI
         let productContent;
         try {
-          // Import the content generation function
+          // Import the content generation and cleaning functions
           const { generateProductContent } = await import('../../lib/content');
-          productContent = await generateProductContent(asin);
+          const { cleanProductContent } = await import('../../lib/content-cleaner');
+          
+          const rawContent = await generateProductContent(asin);
+          // Clean the content to remove any ASINs or product codes
+          productContent = cleanProductContent(rawContent);
         } catch (contentError) {
           console.warn('Content generation failed, using fallback:', contentError);
           productContent = {
-            title: `Product ${asin}`,
+            title: `Essential Product`,
             description: 'Product description could not be generated. Please add manually.',
-            slug: `product-${asin.toLowerCase()}`
+            slug: `essential-product`
           };
         }
 
@@ -62,7 +66,7 @@ if (Astro.request.method === 'POST') {
           imageUrl = await getProductImageUrl(amazonUrl, asin, productContent.title);
         } catch (imageError) {
           console.warn('Image URL generation failed, using fallback:', imageError);
-          imageUrl = `https://m.media-amazon.com/images/I/${asin}.01._SL500_.jpg`; // Fallback
+          imageUrl = `https://m.media-amazon.com/images/I/${asin}._AC_SL500_.jpg`; // Fallback
         }
 
         // Save to Airtable

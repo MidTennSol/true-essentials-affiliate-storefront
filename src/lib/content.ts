@@ -40,7 +40,7 @@ export async function generateProductTitle(asin: string): Promise<string> {
   
   if (!openai) {
     // Fallback: generate basic title
-    return `Product ${asin}`;
+    return `Essential Product`;
   }
 
   try {
@@ -53,7 +53,7 @@ export async function generateProductTitle(asin: string): Promise<string> {
         },
         {
           role: 'user',
-          content: `Create a compelling product title for an Amazon product with ASIN: ${asin}. The title should be concise (under 60 characters), appealing, and suitable for affiliate marketing. Just return the title, nothing else.`
+          content: `Create a compelling, generic product title that would work for affiliate marketing. The title should be concise (under 60 characters), appealing, and professional. Focus on benefits and appeal rather than specific product codes. Just return the title, nothing else.`
         }
       ],
       max_tokens: 60,
@@ -61,10 +61,10 @@ export async function generateProductTitle(asin: string): Promise<string> {
     });
 
     const title = response.choices[0]?.message?.content?.trim();
-    return title || `Product ${asin}`;
+    return title || `Essential Product`;
   } catch (error) {
     console.error('Error generating product title:', error);
-    return `Product ${asin}`;
+    return `Essential Product`;
   }
 }
 
@@ -89,7 +89,7 @@ export async function generateProductDescription(asin: string, title?: string): 
         },
         {
           role: 'user',
-          content: `Write a compelling product description for an Amazon product with ASIN: ${asin}${title ? ` and title: "${title}"` : ''}. The description should be 2-3 paragraphs, highlight key benefits, create some urgency, and include a call-to-action. Make it persuasive for affiliate marketing.`
+          content: `Write a compelling product description${title ? ` for a product titled: "${title}"` : ''}. The description should be 2-3 paragraphs, highlight key benefits, create some urgency, and include a call-to-action. Make it persuasive for affiliate marketing. Do not include any product codes or technical identifiers.`
         }
       ],
       max_tokens: 300,
@@ -136,7 +136,7 @@ export async function generateProductContent(asin: string): Promise<{
     console.error('Error generating product content:', error);
     
     // Fallback content
-    const fallbackTitle = `Product ${asin}`;
+    const fallbackTitle = `Essential Product`;
     return {
       title: fallbackTitle,
       description: `This is a great product available on Amazon. Click the link below to check it out and make your purchase.`,
