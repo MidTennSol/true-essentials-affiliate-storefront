@@ -40,22 +40,19 @@ if (Astro.request.method === 'POST') {
         const affiliateTag = import.meta.env.AFFILIATE_TAG || 'yourtag-20';
         const affiliateUrl = `https://www.amazon.com/dp/${asin}?tag=${affiliateTag}`;
         
-        // Generate AI content using OpenAI
+        // Generate product content using simple approach
         let productContent;
         try {
-          // Import the content generation and cleaning functions
+          // Import the content generation function
           const { generateProductContent } = await import('../../lib/content');
-          const { cleanProductContent } = await import('../../lib/content-cleaner');
           
-          const rawContent = await generateProductContent(asin);
-          // Clean the content to remove any ASINs or product codes
-          productContent = cleanProductContent(rawContent);
+          productContent = await generateProductContent(asin, amazonUrl);
         } catch (contentError) {
           console.warn('Content generation failed, using fallback:', contentError);
           productContent = {
-            title: `Essential Product`,
+            title: `Product`,
             description: 'Product description could not be generated. Please add manually.',
-            slug: `essential-product`
+            slug: `product`
           };
         }
 

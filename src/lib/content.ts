@@ -19,6 +19,63 @@ export function generateSlug(text: string): string {
 }
 
 /**
+ * Extract product title from Amazon page (simplified approach)
+ * This would ideally scrape the actual title, but for now we'll use fallbacks
+ */
+export async function extractAmazonTitle(amazonUrl: string, asin: string): Promise<string> {
+  // Try to get title from URL structure first
+  const { createSmartTitle } = await import('./title-extractor');
+  return createSmartTitle(asin, amazonUrl);
+}
+
+/**
+ * Create a clean, truncated title from extracted title
+ */
+export function createCleanTitle(rawTitle: string, maxLength: number = 50): string {
+  if (!rawTitle || rawTitle.trim().length === 0) {
+    return 'Product';
+  }
+  
+  // Clean the title
+  let cleanTitle = rawTitle
+    .trim()
+    // Remove common Amazon cruft
+    .replace(/\s*\|\s*Amazon\.com.*$/i, '')
+    .replace(/\s*-\s*Amazon\.com.*$/i, '')
+    .replace(/^Amazon\.com\s*:\s*/i, '')
+    // Remove ASINs and product codes
+    .replace(/\b[A-Z0-9]{10}\b/g, '')
+    .replace(/\s*-\s*[A-Z0-9]{10}\s*/g, '')
+    // Clean up extra spaces and punctuation
+    .replace(/\s+/g, ' ')
+    .replace(/\s*-\s*$/, '')
+    .replace(/^\s*-\s*/, '')
+    .trim();
+  
+  // If title is too long, truncate with ellipsis
+  if (cleanTitle.length > maxLength) {
+    // Find the last space before the limit to avoid cutting words
+    let truncateAt = maxLength;
+    const lastSpace = cleanTitle.lastIndexOf(' ', maxLength - 3);
+    if (lastSpace > maxLength * 0.7) { // Only use space if it's not too early
+      truncateAt = lastSpace;
+    }
+    cleanTitle = cleanTitle.substring(0, truncateAt).trim() + '...';
+  }
+  
+  return cleanTitle || 'Product';
+}
+
+/**
+ * Generate simple, relevant product description
+ */
+export function generateSimpleDescription(title: string, asin: string): string {
+  const cleanTitle = title.replace(/\.\.\.$/, '').trim();
+  
+  return `Check out this ${cleanTitle.toLowerCase()} on Amazon. This product offers great value and quality. Click below to view full details, customer reviews, and current pricing on Amazon.`;
+}
+
+/**
  * Initialize OpenAI client (only if API key is available)
  */
 function getOpenAIClient(): OpenAI | null {
@@ -33,14 +90,13 @@ function getOpenAIClient(): OpenAI | null {
 }
 
 /**
- * Generate product title using OpenAI
+ * Generate enhanced description using AI (optional enhancement)
  */
-export async function generateProductTitle(asin: string): Promise<string> {
+export async function generateEnhancedDescription(title: string): Promise<string> {
   const openai = getOpenAIClient();
   
   if (!openai) {
-    // Fallback: generate basic title
-    return `Essential Product`;
+    return generateSimpleDescription(title, '');
   }
 
   try {
@@ -49,65 +105,29 @@ export async function generateProductTitle(asin: string): Promise<string> {
       messages: [
         {
           role: 'system',
-          content: 'You are a helpful assistant that creates compelling product titles for affiliate marketing. Create short, catchy, SEO-friendly product titles that would encourage clicks and purchases.'
+          content: 'You are a helpful assistant that writes brief, appealing product descriptions for affiliate marketing. Keep descriptions under 200 characters and focus on benefits.'
         },
         {
           role: 'user',
-          content: `Create a compelling, generic product title that would work for affiliate marketing. The title should be concise (under 60 characters), appealing, and professional. Focus on benefits and appeal rather than specific product codes. Just return the title, nothing else.`
+          content: `Write a brief, appealing description for: "${title}". Focus on benefits and value. Keep it under 200 characters.`
         }
       ],
-      max_tokens: 60,
-      temperature: 0.7,
-    });
-
-    const title = response.choices[0]?.message?.content?.trim();
-    return title || `Essential Product`;
-  } catch (error) {
-    console.error('Error generating product title:', error);
-    return `Essential Product`;
-  }
-}
-
-/**
- * Generate product description using OpenAI
- */
-export async function generateProductDescription(asin: string, title?: string): Promise<string> {
-  const openai = getOpenAIClient();
-  
-  if (!openai) {
-    // Fallback: generate basic description  
-    return `This is a great product available on Amazon. Click the link below to check it out and make your purchase.`;
-  }
-
-  try {
-    const response = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a skilled copywriter specializing in affiliate marketing. Write compelling product descriptions that highlight benefits, create urgency, and encourage purchases. Focus on value propositions and emotional triggers.'
-        },
-        {
-          role: 'user',
-          content: `Write a compelling product description${title ? ` for a product titled: "${title}"` : ''}. The description should be 2-3 paragraphs, highlight key benefits, create some urgency, and include a call-to-action. Make it persuasive for affiliate marketing. Do not include any product codes or technical identifiers.`
-        }
-      ],
-      max_tokens: 300,
+      max_tokens: 100,
       temperature: 0.7,
     });
 
     const description = response.choices[0]?.message?.content?.trim();
-    return description || `This is a great product available on Amazon. Click the link below to check it out and make your purchase.`;
+    return description || generateSimpleDescription(title, '');
   } catch (error) {
-    console.error('Error generating product description:', error);
-    return `This is a great product available on Amazon. Click the link below to check it out and make your purchase.`;
+    console.error('Error generating enhanced description:', error);
+    return generateSimpleDescription(title, '');
   }
 }
 
 /**
- * Generate both title and description for a product
+ * Generate product content using simple, reliable methods
  */
-export async function generateProductContent(asin: string): Promise<{
+export async function generateProductContent(asin: string, amazonUrl?: string): Promise<{
   title: string;
   description: string;
   slug: string;
@@ -115,12 +135,12 @@ export async function generateProductContent(asin: string): Promise<{
   console.log(`Generating content for ASIN: ${asin}`);
   
   try {
-    // Generate title first
-    const title = await generateProductTitle(asin);
+    // Extract title using smart extraction
+    const title = await extractAmazonTitle(amazonUrl || '', asin);
     console.log(`Generated title: ${title}`);
     
-    // Generate description using the title for context
-    const description = await generateProductDescription(asin, title);
+    // Generate simple description
+    const description = generateSimpleDescription(title, asin);
     console.log(`Generated description length: ${description.length} characters`);
     
     // Generate slug from title
@@ -139,7 +159,7 @@ export async function generateProductContent(asin: string): Promise<{
     const fallbackTitle = `Essential Product`;
     return {
       title: fallbackTitle,
-      description: `This is a great product available on Amazon. Click the link below to check it out and make your purchase.`,
+      description: `This is a quality product available on Amazon. Click the link below to view details and make your purchase.`,
       slug: generateSlug(fallbackTitle)
     };
   }
@@ -163,16 +183,16 @@ export function validateContent(content: { title: string; description: string; s
 } {
   const errors: string[] = [];
   
-  if (!content.title || content.title.length < 5) {
-    errors.push('Title must be at least 5 characters long');
+  if (!content.title || content.title.length < 3) {
+    errors.push('Title must be at least 3 characters long');
   }
   
   if (content.title && content.title.length > 100) {
     errors.push('Title must be less than 100 characters long');
   }
   
-  if (!content.description || content.description.length < 20) {
-    errors.push('Description must be at least 20 characters long');
+  if (!content.description || content.description.length < 10) {
+    errors.push('Description must be at least 10 characters long');
   }
   
   if (!content.slug || content.slug.length < 3) {
