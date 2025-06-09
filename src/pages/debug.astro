@@ -1,0 +1,136 @@
+---
+import { getAllProducts } from '../lib/airtable.js';
+import type { AirtableProduct } from '../lib/airtable.js';
+
+let products: AirtableProduct[] = [];
+let error: string | null = null;
+
+try {
+  products = await getAllProducts();
+} catch (e) {
+  error = String(e);
+}
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Debug Airtable Data</title>
+  <style>
+    body { 
+      font-family: monospace; 
+      padding: 20px; 
+      background: #f5f5f5; 
+    }
+    .product { 
+      background: white; 
+      padding: 15px; 
+      margin: 10px 0; 
+      border-radius: 8px; 
+      border-left: 4px solid #007bff; 
+    }
+    .field { 
+      margin: 5px 0; 
+    }
+    .label { 
+      font-weight: bold; 
+      color: #333; 
+    }
+    .value { 
+      color: #666; 
+      word-break: break-all; 
+    }
+    .empty { 
+      color: #dc3545; 
+      font-style: italic; 
+    }
+    .nordic { 
+      border-left-color: #28a745; 
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 Airtable Debug Data</h1>
+  
+  {error ? (
+    <div style="color: red; background: #ffe6e6; padding: 15px; border-radius: 8px;">
+      <strong>Error:</strong> {error}
+    </div>
+  ) : (
+    <div>
+      <p><strong>Found {products.length} products in Airtable:</strong></p>
+      
+      {products.map((product, index) => (
+        <div class={`product ${product.fields.Title.toLowerCase().includes('nordic') ? 'nordic' : ''}`}>
+          <h3>{index + 1}. {product.fields.Title}</h3>
+          
+          <div class="field">
+            <span class="label">ID:</span> 
+            <span class="value">{product.id}</span>
+          </div>
+          
+          <div class="field">
+            <span class="label">Image URL:</span> 
+            <span class={`value ${!product.fields['Image URL'] ? 'empty' : ''}`}>
+              {product.fields['Image URL'] || 'EMPTY/NULL'}
+            </span>
+          </div>
+          
+          <div class="field">
+            <span class="label">Image URL Type:</span> 
+            <span class="value">{typeof product.fields['Image URL']}</span>
+          </div>
+          
+          <div class="field">
+            <span class="label">Image URL Length:</span> 
+            <span class="value">{product.fields['Image URL']?.length || 0} chars</span>
+          </div>
+          
+          <div class="field">
+            <span class="label">Affiliate URL:</span> 
+            <span class={`value ${!product.fields['Affiliate URL'] ? 'empty' : ''}`}>
+              {product.fields['Affiliate URL'] || 'EMPTY/NULL'}
+            </span>
+          </div>
+          
+          <div class="field">
+            <span class="label">Slug:</span> 
+            <span class="value">{product.fields.Slug || 'EMPTY/NULL'}</span>
+          </div>
+          
+          <div class="field">
+            <span class="label">Created:</span> 
+            <span class="value">{product.fields['Created At']}</span>
+          </div>
+          
+          {product.fields['Image URL'] && (
+            <div class="field">
+              <span class="label">Image Test:</span>
+              <div style="margin-top: 10px;">
+                <img 
+                  src={product.fields['Image URL']} 
+                  alt={product.fields.Title}
+                  style="max-width: 200px; height: auto; border: 1px solid #ddd;"
+                  onerror="this.style.border='2px solid red'; this.alt='❌ Failed to load';"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  )}
+  
+  <div style="margin-top: 40px; padding: 20px; background: #e9ecef; border-radius: 8px;">
+    <h3>🔧 Troubleshooting Tips:</h3>
+    <ul>
+      <li>If Image URL is empty, the add-product form isn't saving image URLs</li>
+      <li>If Image URL exists but image fails to load, the URL pattern is wrong</li>
+      <li>Check that Image URL field in Airtable is "Single line text", not "URL" type</li>
+      <li>Nordic Ware products should have green border if found</li>
+    </ul>
+  </div>
+</body>
+</html> 

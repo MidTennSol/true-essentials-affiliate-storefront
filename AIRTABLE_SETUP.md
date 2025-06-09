@@ -16,8 +16,8 @@ Create a table called **"Affiliate Products"** with the following fields:
 |---------------|------------------|------------------|
 | **Title**     | Single line text | Primary field    |
 | **Description** | Long text      | Rich text enabled |
-| **Image URL** | URL             | -                |
-| **Affiliate URL** | URL          | -                |
+| **Image URL** | Single line text | -                |
+| **Affiliate URL** | Single line text | -                |
 | **Slug**      | Formula         | `REGEX_REPLACE(LOWER(SUBSTITUTE({Title}, " ", "-")), "[^a-z0-9\\-]", "")` |
 | **Created At** | Created time    | Include time     |
 
@@ -27,9 +27,9 @@ Create a table called **"Affiliate Products"** with the following fields:
 
 **Description**: Full product description for the detail page
 
-**Image URL**: Direct URL to product image (will be populated automatically)
+**Image URL**: Direct URL to product image (will be populated automatically) - Use Single line text, not URL field type
 
-**Affiliate URL**: The Amazon affiliate link (will be populated automatically)
+**Affiliate URL**: The Amazon affiliate link (will be populated automatically) - Use Single line text, not URL field type
 
 **Slug**: Auto-generated URL-friendly version of the title for routing
 
@@ -62,6 +62,12 @@ AIRTABLE_API_KEY=your_actual_token_here
 AIRTABLE_BASE_ID=your_base_id_here
 AFFILIATE_TAG=your-amazon-affiliate-tag
 ```
+
+## Important: Field Type Compatibility
+
+**For Image URL and Affiliate URL fields, use "Single line text" instead of "URL" field type.** 
+
+The URL field type in Airtable can sometimes cause issues with data retrieval and display. Single line text works more reliably for storing URLs and matches the setup of working affiliate storefronts.
 
 ## Test Connection
 

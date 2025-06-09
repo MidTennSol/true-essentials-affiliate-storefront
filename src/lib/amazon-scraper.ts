@@ -1,6 +1,7 @@
 /**
  * Amazon Image Scraper for Affiliate Storefront
- * Simplified version of the user's existing Python scraper
+ * Since Amazon image URLs are not predictable from ASIN alone,
+ * we'll use high-quality placeholder images until real scraping is implemented
  */
 
 /**
@@ -21,42 +22,43 @@ export async function scrapeAmazonImage(amazonUrl: string): Promise<string | nul
 
 /**
  * Generate Amazon image URL using ASIN (fallback method)
- * Uses patterns similar to what the scraper finds
+ * WARNING: These URLs are often not real - Amazon doesn't host images at predictable URLs
+ * This function now returns placeholder images instead
  */
 export function generateAmazonImageUrl(asin: string): string {
   if (!asin || !/^[A-Z0-9]{10}$/.test(asin)) {
     return getPlaceholderImage('Product');
   }
 
-  // Use the most reliable pattern that works for most products
-  // The _AC_SX355_ pattern tends to be more reliable than _AC_SL500_
-  return `https://m.media-amazon.com/images/I/${asin}._AC_SX355_.jpg`;
+  // Instead of generating potentially broken Amazon URLs,
+  // return a high-quality placeholder that actually works
+  return getPlaceholderImage('Amazon Product');
 }
 
 /**
  * Get multiple image URL candidates for testing
+ * Returns placeholder images since Amazon URLs are unreliable
  */
 export function generateImageUrlCandidates(asin: string): string[] {
   if (!asin || !/^[A-Z0-9]{10}$/.test(asin)) {
     return [getPlaceholderImage('Product')];
   }
 
-  // Return multiple patterns in order of reliability
+  // Return working placeholder images instead of broken Amazon URLs
   return [
-    `https://m.media-amazon.com/images/I/${asin}._AC_SX355_.jpg`,
-    `https://m.media-amazon.com/images/I/${asin}._AC_SX342_.jpg`,
-    `https://images-na.ssl-images-amazon.com/images/I/${asin}._AC_SX355_.jpg`,
-    `https://m.media-amazon.com/images/I/${asin}._AC_SL500_.jpg`,
-    `https://images-na.ssl-images-amazon.com/images/P/${asin}.01._SL500_.jpg`
+    getPlaceholderImage('Amazon Product'),
+    `https://via.placeholder.com/400x400/f1f5f9/64748b?text=🛒+${asin}`,
+    'https://via.placeholder.com/400x400/e2e8f0/64748b?text=📦+Product+Image'
   ];
 }
 
 /**
- * Get placeholder image for products
+ * Get high-quality placeholder image for products
  */
 function getPlaceholderImage(title: string): string {
   const category = getCategoryFromTitle(title);
-  return `https://via.placeholder.com/400x400/e2e8f0/64748b?text=${encodeURIComponent(category)}`;
+  // Use a more professional placeholder service
+  return `https://via.placeholder.com/400x400/f8fafc/475569?text=${encodeURIComponent(category)}`;
 }
 
 /**
@@ -81,12 +83,12 @@ function getCategoryFromTitle(title: string): string {
     return '🚗 Automotive';
   }
   
-  return '📦 Product';
+  return '📦 Amazon Product';
 }
 
 /**
  * Enhanced image URL with multiple fallbacks
- * This mimics the approach used in the Python scraper
+ * Now focuses on reliable placeholder images instead of broken Amazon URLs
  */
 export async function getProductImageUrl(amazonUrl: string, asin: string, productTitle: string): Promise<string> {
   try {
@@ -96,8 +98,8 @@ export async function getProductImageUrl(amazonUrl: string, asin: string, produc
       return scrapedImage;
     }
 
-    // 2. Use ASIN-based URL generation (fallback)
-    return generateAmazonImageUrl(asin);
+    // 2. Return high-quality placeholder instead of broken Amazon URLs
+    return getPlaceholderImage(productTitle);
 
   } catch (error) {
     console.error('Error getting product image:', error);
