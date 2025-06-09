@@ -1,0 +1,301 @@
+---
+// Test page for Puppeteer Amazon scraper
+import Header from '../components/Header.astro';
+
+let result: any = null;
+let error: string | null = null;
+
+if (Astro.request.method === 'POST') {
+  const formData = await Astro.request.formData();
+  const testUrl = formData.get('test_url') as string;
+  
+  if (!testUrl || !testUrl.trim()) {
+    error = 'Please enter an Amazon URL to test';
+  } else if (!testUrl.includes('amazon.com')) {
+    error = 'Please enter a valid Amazon.com URL';
+  } else {
+    try {
+      console.log('🧪 Starting Puppeteer test for:', testUrl);
+      
+      // Test our Puppeteer scraper
+      const { scrapeAmazonImage, scrapeAmazonProduct } = await import('../lib/amazon-scraper');
+      
+      const imageUrl = await scrapeAmazonImage(testUrl);
+      const productData = await scrapeAmazonProduct(testUrl);
+      
+      result = {
+        method: 'Puppeteer',
+        testUrl,
+        imageUrl,
+        productData,
+        timestamp: new Date().toISOString()
+      };
+      
+      console.log('✅ Puppeteer test completed successfully');
+      
+    } catch (err) {
+      error = `Puppeteer test failed: ${String(err)}`;
+      console.error('❌ Puppeteer test error:', err);
+    }
+  }
+}
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Amazon Scraper Test</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      margin: 0;
+      background: #f5f5f5;
+    }
+    .main-container {
+      padding: 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input[type="url"], select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    .btn {
+      background: #007bff;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      margin-right: 10px;
+      font-size: 16px;
+    }
+    .btn:hover {
+      background: #0056b3;
+    }
+    .error {
+      color: #dc3545;
+      background: #f8d7da;
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      border: 1px solid #f5c6cb;
+    }
+    .success {
+      color: #155724;
+      background: #d4edda;
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      border: 1px solid #c3e6cb;
+    }
+    .result-card {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .result-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #495057;
+    }
+    .result-item {
+      margin-bottom: 15px;
+      padding: 10px;
+      background: white;
+      border-radius: 4px;
+      border-left: 4px solid #007bff;
+    }
+    .result-label {
+      font-weight: bold;
+      color: #495057;
+      margin-bottom: 5px;
+    }
+    .result-value {
+      color: #212529;
+      word-break: break-all;
+    }
+    .image-preview {
+      max-width: 300px;
+      max-height: 300px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+    .sample-urls {
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      border-radius: 4px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .sample-urls h4 {
+      margin-top: 0;
+      color: #856404;
+    }
+    .sample-url {
+      font-family: monospace;
+      color: #495057;
+      background: white;
+      padding: 5px 8px;
+      border-radius: 3px;
+      margin: 5px 0;
+      cursor: pointer;
+      border: 1px solid #dee2e6;
+    }
+    .sample-url:hover {
+      background: #e9ecef;
+    }
+    .comparison {
+      background: #e9ecef;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      padding: 15px;
+      margin-top: 20px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <Header />
+  
+  <div class="main-container">
+    <div class="container">
+             <h1>🧪 Amazon Scraper Test</h1>
+       <p>Test the Puppeteer-based Amazon product image and data extraction.</p>
+
+      <div class="sample-urls">
+        <h4>📋 Sample Amazon URLs to Test:</h4>
+        <div class="sample-url" onclick="document.getElementById('test_url').value = this.textContent">
+          https://www.amazon.com/HiLetgo-Vibration-Shaking-Position-Switches/dp/B00M1PMYCE
+        </div>
+        <div class="sample-url" onclick="document.getElementById('test_url').value = this.textContent">
+          https://www.amazon.com/Snapware-Rectangular-Leak-Proof-Microwave-Dishwasher/dp/B00HC62UWG
+        </div>
+        <div class="sample-url" onclick="document.getElementById('test_url').value = this.textContent">
+          https://www.amazon.com/Vibration-Sensor-Module-Sensitivity-Sensitive/dp/B09SHV2BG5
+        </div>
+      </div>
+
+      {error && (
+        <div class="error">
+          <strong>❌ Error:</strong> {error}
+        </div>
+      )}
+
+             {result && (
+         <div class="success">
+           <strong>✅ Puppeteer Test Completed!</strong> Successfully extracted data from Amazon.
+         </div>
+       )}
+
+      <form method="POST">
+        <div class="form-group">
+          <label for="test_url">🔗 Amazon Product URL to Test:</label>
+          <input 
+            type="url" 
+            id="test_url"
+            name="test_url" 
+            placeholder="https://www.amazon.com/dp/ASIN123456"
+            required
+          />
+        </div>
+        
+        
+        
+                 <button type="submit" class="btn">
+           🚀 Run Puppeteer Test
+         </button>
+        
+        <a href="/admin" class="btn" style="background: #6c757d;">
+          ← Back to Admin
+        </a>
+      </form>
+
+             {result && (
+         <div class="result-card">
+           <div class="result-title">🎯 Puppeteer Extraction Results</div>
+          
+          <div class="result-item">
+            <div class="result-label">📍 Test URL:</div>
+            <div class="result-value">{result.testUrl}</div>
+          </div>
+
+          <div class="result-item">
+            <div class="result-label">🖼️ Extracted Image URL:</div>
+            <div class="result-value">
+              {result.imageUrl ? result.imageUrl : 'No image found'}
+            </div>
+            {result.imageUrl && (
+              <img src={result.imageUrl} alt="Extracted product image" class="image-preview" />
+            )}
+          </div>
+
+          {result.productData && (
+            <>
+              <div class="result-item">
+                <div class="result-label">📝 Extracted Title:</div>
+                <div class="result-value">{result.productData.title}</div>
+              </div>
+
+              <div class="result-item">
+                <div class="result-label">📄 Extracted Description:</div>
+                <div class="result-value">{result.productData.description || 'No description found'}</div>
+              </div>
+
+              <div class="result-item">
+                <div class="result-label">🖼️ Product Image (from full scrape):</div>
+                <div class="result-value">{result.productData.image}</div>
+                {result.productData.image && (
+                  <img src={result.productData.image} alt="Product image from full scrape" class="image-preview" />
+                )}
+              </div>
+            </>
+          )}
+
+          <div class="result-item">
+            <div class="result-label">⏰ Test Timestamp:</div>
+            <div class="result-value">{result.timestamp}</div>
+          </div>
+        </div>
+      )}
+
+             <div class="comparison">
+         <h4>🎭 Puppeteer Scraper Features:</h4>
+         <ul>
+           <li>✅ <strong>Windows-Friendly:</strong> Works reliably on Windows without driver setup</li>
+           <li>✅ <strong>Same DOM Methods:</strong> Uses identical extraction patterns as your existing scraper</li>
+           <li>✅ <strong>Auto-Chrome:</strong> Bundles Chrome automatically, no external dependencies</li>
+           <li>✅ <strong>Real Image URLs:</strong> Extracts actual Amazon CDN image URLs</li>
+           <li>✅ <strong>Complete Data:</strong> Extracts title, description, and images in one pass</li>
+         </ul>
+         <p style="margin-bottom: 0;"><strong>🚀 Result:</strong> Real Amazon image URLs that actually work, integrated directly into your affiliate storefront!</p>
+       </div>
+    </div>
+  </div>
+</body>
+</html> 
