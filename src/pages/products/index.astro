@@ -302,11 +302,11 @@ try {
           {products.map((product) => (
             <div class="product-card">
               <img 
-                src={product.fields['Image URL'] || `https://via.placeholder.com/400x400/e2e8f0/64748b?text=${encodeURIComponent('📦 ' + product.fields.Title.split(' ').slice(0, 2).join(' '))}`}
+                src={product.fields['Image URL'] || 'https://via.placeholder.com/400x400/e2e8f0/64748b?text=📦+Product'}
                 alt={product.fields.Title}
                 class="product-image"
                 loading="lazy"
-                onerror="this.onerror=null; this.src='https://via.placeholder.com/400x400/e2e8f0/64748b?text=' + encodeURIComponent('📦 Product');"
+                onerror="this.onerror=null; this.src='https://via.placeholder.com/400x400/e2e8f0/64748b?text=📦+Product';"
               />
               
               <div class="product-content">
