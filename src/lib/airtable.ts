@@ -106,6 +106,47 @@ export async function testConnection(): Promise<boolean> {
 }
 
 /**
+ * Get a single product by ID
+ */
+export async function getProductById(id: string): Promise<AirtableProduct | null> {
+  try {
+    const record = await table.find(id);
+    
+    return {
+      id: record.id,
+      fields: record.fields as AirtableProduct['fields'],
+    };
+  } catch (error) {
+    console.error('Error fetching product by ID:', error);
+    return null;
+  }
+}
+
+/**
+ * Update an existing product
+ */
+export async function updateProduct(id: string, updates: Partial<CreateProductData>): Promise<AirtableProduct> {
+  try {
+    const updateFields: any = {};
+    
+    if (updates.title) updateFields['Title'] = updates.title;
+    if (updates.description) updateFields['Description'] = updates.description;
+    if (updates.imageUrl) updateFields['Image URL'] = updates.imageUrl;
+    if (updates.affiliateUrl) updateFields['Affiliate URL'] = updates.affiliateUrl;
+    
+    const record = await table.update(id, updateFields);
+    
+    return {
+      id: record.id,
+      fields: record.fields as AirtableProduct['fields'],
+    };
+  } catch (error) {
+    console.error('Error updating product:', error);
+    throw new Error('Failed to update product');
+  }
+}
+
+/**
  * Get total number of products
  */
 export async function getProductCount(): Promise<number> {

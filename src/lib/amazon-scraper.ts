@@ -11,13 +11,32 @@ import puppeteer from 'puppeteer';
  */
 const SCRAPING_CONFIG = {
   timeout: 30000, // 30 seconds
-  headless: 'new' as const, // Use new headless mode
+  headless: true, // Fixed to use boolean instead of 'new'
   user_agents: [
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0'
   ]
 };
+
+/**
+ * Check if we're running in an environment that supports Puppeteer
+ */
+function isPuppeteerSupported(): boolean {
+  // Check if we're in Vercel or similar serverless environments
+  if (typeof process !== 'undefined') {
+    const isVercel = process.env.VERCEL === '1';
+    const isNetlify = process.env.NETLIFY === 'true';
+    const isServerless = process.env.AWS_LAMBDA_FUNCTION_NAME;
+    
+    if (isVercel || isNetlify || isServerless) {
+      console.log('🚫 Puppeteer not supported in serverless environment');
+      return false;
+    }
+  }
+  
+  return true;
+}
 
 // Puppeteer doesn't need a separate setup function - it's handled in each scrape function
 
@@ -30,6 +49,12 @@ export async function scrapeAmazonImage(amazonUrl: string): Promise<string | nul
   
   try {
     console.log('🔍 Starting Puppeteer scraping for:', amazonUrl);
+    
+    // Check if Puppeteer is supported in this environment
+    if (!isPuppeteerSupported()) {
+      console.log('⚠️ Puppeteer not supported in this environment, skipping scraping');
+      return null;
+    }
     
     // Launch browser
     browser = await puppeteer.launch({
@@ -321,16 +346,29 @@ function getCategoryFromTitle(title: string): string {
  */
 export async function getProductImageUrl(amazonUrl: string, asin: string, productTitle: string): Promise<string> {
   try {
-    // 1. Try Puppeteer scraping first (real image extraction)
-    console.log('🔍 Attempting Puppeteer image extraction...');
-    const scrapedImage = await scrapeAmazonImage(amazonUrl);
-    if (scrapedImage) {
-      console.log('✅ Successfully extracted real Amazon image!');
-      return scrapedImage;
+    // 1. Try simple HTML parsing first (works in serverless)
+    console.log('🔍 Attempting HTML parsing image extraction...');
+    const { getProductImageUrlSimple } = await import('./amazon-scraper-fetch');
+    const simpleImage = await getProductImageUrlSimple(amazonUrl, asin, productTitle);
+    
+    // If we got a real image (not placeholder), return it
+    if (simpleImage && !simpleImage.includes('placeholder.com')) {
+      console.log('✅ Successfully extracted image via HTML parsing!');
+      return simpleImage;
+    }
+    
+    // 2. Try Puppeteer if available (local development)
+    if (isPuppeteerSupported()) {
+      console.log('🔍 Trying Puppeteer as backup...');
+      const scrapedImage = await scrapeAmazonImage(amazonUrl);
+      if (scrapedImage) {
+        console.log('✅ Successfully extracted real Amazon image via Puppeteer!');
+        return scrapedImage;
+      }
     }
 
-    // 2. Fallback to placeholder with category
-    console.log('⚠️ Puppeteer extraction failed, using placeholder');
+    // 3. Fallback to placeholder with category
+    console.log('⚠️ All extraction methods failed, using placeholder');
     return getPlaceholderImage(productTitle);
 
   } catch (error) {

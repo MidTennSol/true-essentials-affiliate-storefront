@@ -8,10 +8,12 @@ if (!isAuthenticated) {
 
 let results = null;
 let error = null;
+let processing = false;
 
 if (Astro.request.method === 'POST') {
   const formData = await Astro.request.formData();
   const urlsText = formData.get('urls') as string;
+  const shouldProcess = formData.get('process') === 'true';
   
   if (!urlsText || !urlsText.trim()) {
     error = 'Please enter at least one Amazon URL';
@@ -25,15 +27,131 @@ if (Astro.request.method === 'POST') {
       
       if (urls.length === 0) {
         error = 'No valid URLs found';
-      } else {
+      } else if (!shouldProcess) {
+        // Just validate URLs
         results = {
           total: urls.length,
           processed: 0,
           successful: 0,
           failed: 0,
           urls: urls,
-          message: `Ready to process ${urls.length} URL${urls.length === 1 ? '' : 's'}`
+          message: `Ready to process ${urls.length} URL${urls.length === 1 ? '' : 's'}`,
+          validated: true
         };
+      } else {
+        // Actually process the URLs
+        processing = true;
+        const processedResults = [];
+        let successful = 0;
+        let failed = 0;
+        
+        console.log(`🔄 Starting bulk processing of ${urls.length} URLs...`);
+        
+        for (let i = 0; i < urls.length; i++) {
+          const amazonUrl = urls[i];
+          console.log(`\n📦 Processing ${i + 1}/${urls.length}: ${amazonUrl}`);
+          
+          try {
+            // Extract ASIN from URL
+            const asinMatch = amazonUrl.match(/(?:\/dp\/|\/gp\/product\/|ASIN\/|product\/)([A-Z0-9]{10})/i);
+            if (!asinMatch) {
+              throw new Error('Could not extract ASIN from URL');
+            }
+            const asin = asinMatch[1];
+            
+            // Generate affiliate URL
+            const affiliateTag = import.meta.env.AFFILIATE_TAG || 'yourtag-20';
+            const affiliateUrl = `https://www.amazon.com/dp/${asin}?tag=${affiliateTag}`;
+            
+            // Generate product content
+            let productContent;
+            try {
+              const { generateProductContent } = await import('../../lib/content');
+              productContent = await generateProductContent(asin, amazonUrl);
+            } catch (contentError) {
+              console.warn('Content generation failed, using fallback:', contentError);
+              productContent = {
+                title: `Product ${asin}`,
+                description: 'Product description could not be generated. Please add manually.',
+                slug: `product-${asin.toLowerCase()}`
+              };
+            }
+
+            // Get product image URL using Puppeteer
+            let imageUrl;
+            try {
+              const { getProductImageUrl } = await import('../../lib/amazon-scraper');
+              imageUrl = await getProductImageUrl(amazonUrl, asin, productContent.title);
+              console.log(`✅ Image extracted: ${imageUrl}`);
+            } catch (imageError) {
+              console.warn('Image URL generation failed, using fallback:', imageError);
+              imageUrl = `https://m.media-amazon.com/images/I/${asin}._AC_SL500_.jpg`; // Fallback
+            }
+
+            // Save to Airtable
+            let airtableResult;
+            try {
+              const { createProduct } = await import('../../lib/airtable');
+              airtableResult = await createProduct({
+                title: productContent.title,
+                description: productContent.description,
+                affiliateUrl: affiliateUrl,
+                imageUrl: imageUrl
+              });
+              
+              successful++;
+              processedResults.push({
+                url: amazonUrl,
+                asin: asin,
+                title: productContent.title,
+                imageUrl: imageUrl,
+                status: 'success',
+                airtableId: airtableResult.id
+              });
+              
+              console.log(`✅ Successfully processed: ${productContent.title}`);
+            } catch (airtableError) {
+              failed++;
+              processedResults.push({
+                url: amazonUrl,
+                asin: asin,
+                title: productContent.title,
+                imageUrl: imageUrl,
+                status: 'error',
+                error: String(airtableError)
+              });
+              
+              console.warn(`❌ Airtable save failed for ${asin}:`, airtableError);
+            }
+            
+          } catch (err) {
+            failed++;
+            processedResults.push({
+              url: amazonUrl,
+              status: 'error',
+              error: String(err)
+            });
+            
+            console.error(`❌ Error processing ${amazonUrl}:`, err);
+          }
+          
+          // Add a small delay between requests to be respectful
+          if (i < urls.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          }
+        }
+        
+        results = {
+          total: urls.length,
+          processed: urls.length,
+          successful: successful,
+          failed: failed,
+          details: processedResults,
+          message: `Processed ${urls.length} URLs: ${successful} successful, ${failed} failed`,
+          completed: true
+        };
+        
+        console.log(`🎉 Bulk processing completed: ${successful}/${urls.length} successful`);
       }
     } catch (err) {
       error = 'Error processing URLs: ' + String(err);
@@ -195,8 +313,8 @@ if (Astro.request.method === 'POST') {
       </div>
     </div>
 
-    <div class="warning">
-      <strong>Note:</strong> Bulk processing functionality is being developed. Currently showing URL parsing and validation.
+    <div class="info">
+      <strong>Ready for Bulk Processing!</strong> Enter Amazon URLs below to extract real product images using Puppeteer and add products to your catalog.
     </div>
 
     {error && (
@@ -205,7 +323,7 @@ if (Astro.request.method === 'POST') {
       </div>
     )}
 
-    {results && (
+    {results && results.validated && (
       <div class="success">
         <strong>URLs Parsed Successfully!</strong> {results.message}
         
@@ -230,6 +348,51 @@ if (Astro.request.method === 'POST') {
             {results.urls.map((url, index) => (
               <div class="url-item">
                 {index + 1}. {url}
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        <form method="POST" style="margin-top: 20px;">
+          <input type="hidden" name="urls" value={results.urls.join('\n')} />
+          <input type="hidden" name="process" value="true" />
+          <button type="submit" class="btn" style="background: #28a745;">
+            🚀 Process All {results.total} URLs
+          </button>
+        </form>
+      </div>
+    )}
+
+    {results && results.completed && (
+      <div class="success">
+        <strong>Bulk Processing Complete!</strong> {results.message}
+        
+        <div class="stats">
+          <div class="stat-card">
+            <div class="stat-number">{results.total}</div>
+            <div class="stat-label">Total URLs</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">{results.successful}</div>
+            <div class="stat-label">Successful</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">{results.failed}</div>
+            <div class="stat-label">Failed</div>
+          </div>
+        </div>
+
+        <div class="url-preview">
+          <h3>Processing Results:</h3>
+          <div class="url-list">
+            {results.details.map((item, index) => (
+              <div class="url-item" style={`color: ${item.status === 'success' ? '#155724' : '#721c24'}`}>
+                {index + 1}. {item.status === 'success' ? '✅' : '❌'} {item.title || item.url}
+                {item.status === 'error' && (
+                  <div style="font-size: 10px; color: #dc3545; margin-top: 2px;">
+                    Error: {item.error}
+                  </div>
+                )}
               </div>
             ))}
           </div>

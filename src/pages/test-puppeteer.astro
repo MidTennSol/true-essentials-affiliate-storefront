@@ -1,0 +1,186 @@
+---
+// Test Puppeteer image extraction
+let testResults = null;
+let error = null;
+
+if (Astro.request.method === 'POST') {
+  const formData = await Astro.request.formData();
+  const amazonUrl = formData.get('url') as string;
+  
+  if (amazonUrl) {
+    try {
+      console.log('🔍 Testing Puppeteer image extraction for:', amazonUrl);
+      
+      // Extract ASIN
+      const asinMatch = amazonUrl.match(/(?:\/dp\/|\/gp\/product\/|ASIN\/|product\/)([A-Z0-9]{10})/i);
+      if (!asinMatch) {
+        throw new Error('Could not extract ASIN from URL');
+      }
+      const asin = asinMatch[1];
+      
+      // Test direct Puppeteer scraping
+      const { scrapeAmazonImage } = await import('../lib/amazon-scraper');
+      const directImage = await scrapeAmazonImage(amazonUrl);
+      
+      // Test the wrapper function
+      const { getProductImageUrl } = await import('../lib/amazon-scraper');
+      const wrapperImage = await getProductImageUrl(amazonUrl, asin, 'Test Product');
+      
+      testResults = {
+        amazonUrl,
+        asin,
+        directImage,
+        wrapperImage,
+        isPuppeteerWorking: !!directImage && !directImage.includes('._AC_SL500_.jpg'),
+        isRealImage: !!directImage && directImage.includes('images/I/') && !directImage.includes('._AC_SL500_.jpg')
+      };
+      
+      console.log('✅ Test results:', testResults);
+      
+    } catch (err) {
+      error = 'Error testing Puppeteer: ' + String(err);
+      console.error('❌ Puppeteer test error:', err);
+    }
+  }
+}
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Puppeteer Image Extraction</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input[type="url"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    .btn {
+      background: #007bff;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .result {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 4px;
+      margin-top: 20px;
+    }
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+      padding: 15px;
+      border-radius: 4px;
+      margin-top: 20px;
+    }
+    .success {
+      background: #d4edda;
+      color: #155724;
+      padding: 15px;
+      border-radius: 4px;
+      margin-top: 20px;
+    }
+    .image-preview {
+      max-width: 200px;
+      border: 1px solid #ddd;
+      margin: 10px 0;
+    }
+    code {
+      background: #f1f1f1;
+      padding: 2px 4px;
+      border-radius: 2px;
+      font-family: monospace;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧪 Test Puppeteer Image Extraction</h1>
+  
+  <p>This page tests if Puppeteer is actually extracting real Amazon images or falling back to placeholders.</p>
+  
+  {error && (
+    <div class="error">
+      <strong>Error:</strong> {error}
+    </div>
+  )}
+  
+  {testResults && (
+    <div class={testResults.isRealImage ? 'success' : 'error'}>
+      <h3>Test Results:</h3>
+      <p><strong>Amazon URL:</strong> <code>{testResults.amazonUrl}</code></p>
+      <p><strong>ASIN:</strong> <code>{testResults.asin}</code></p>
+      <p><strong>Puppeteer Working:</strong> {testResults.isPuppeteerWorking ? '✅ YES' : '❌ NO'}</p>
+      <p><strong>Real Image Found:</strong> {testResults.isRealImage ? '✅ YES' : '❌ NO'}</p>
+      
+      <h4>Direct Scraping Result:</h4>
+      <p><code>{testResults.directImage || 'null'}</code></p>
+      {testResults.directImage && (
+        <img src={testResults.directImage} alt="Direct scrape result" class="image-preview" />
+      )}
+      
+      <h4>Wrapper Function Result:</h4>
+      <p><code>{testResults.wrapperImage || 'null'}</code></p>
+      {testResults.wrapperImage && (
+        <img src={testResults.wrapperImage} alt="Wrapper function result" class="image-preview" />
+      )}
+      
+      {!testResults.isRealImage && (
+        <div style="background: #fff3cd; padding: 10px; border-radius: 4px; margin-top: 10px;">
+          <strong>⚠️ Issue Detected:</strong> Puppeteer is not extracting real images. It's falling back to placeholder URLs.
+        </div>
+      )}
+    </div>
+  )}
+  
+  <form method="POST">
+    <div class="form-group">
+      <label for="url">Amazon Product URL:</label>
+      <input 
+        type="url" 
+        id="url" 
+        name="url" 
+        required 
+        placeholder="https://www.amazon.com/dp/B123456789"
+        value="https://www.amazon.com/Elmers-Liquid-School-Washable-Ounces/dp/B000J04PNI"
+      />
+    </div>
+    
+    <button type="submit" class="btn">🔍 Test Image Extraction</button>
+  </form>
+  
+  <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee;">
+    <h3>How This Test Works:</h3>
+    <ol>
+      <li>Extracts ASIN from the Amazon URL</li>
+      <li>Calls the direct Puppeteer scraping function</li>
+      <li>Calls the wrapper function used by the admin forms</li>
+      <li>Checks if the returned URLs are real Amazon images or placeholders</li>
+    </ol>
+    
+    <p><strong>Real Amazon images</strong> contain unique hash codes and won't end with <code>._AC_SL500_.jpg</code></p>
+  </div>
+  
+  <p><a href="/admin">← Back to Admin</a></p>
+</body>
+</html> 

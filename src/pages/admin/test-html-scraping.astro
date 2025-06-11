@@ -1,0 +1,208 @@
+---
+// Test HTML parsing approach for Amazon images
+let testResults = null;
+let error = null;
+
+if (Astro.request.method === 'POST') {
+  const formData = await Astro.request.formData();
+  const amazonUrl = formData.get('url') as string;
+  
+  if (amazonUrl) {
+    try {
+      console.log('🔍 Testing HTML parsing for:', amazonUrl);
+      
+      // Extract ASIN
+      const asinMatch = amazonUrl.match(/(?:\/dp\/|\/gp\/product\/|ASIN\/|product\/)([A-Z0-9]{10})/i);
+      if (!asinMatch) {
+        throw new Error('Could not extract ASIN from URL');
+      }
+      const asin = asinMatch[1];
+      
+      // Test HTML parsing approach
+      const { scrapeAmazonImageSimple, getProductImageUrlSimple } = await import('../../lib/amazon-scraper-fetch');
+      
+      const startTime = Date.now();
+      const directResult = await scrapeAmazonImageSimple(amazonUrl);
+      const wrapperResult = await getProductImageUrlSimple(amazonUrl, asin, 'Test Product');
+      const endTime = Date.now();
+      
+      testResults = {
+        amazonUrl,
+        asin,
+        directResult,
+        wrapperResult,
+        executionTime: endTime - startTime,
+        isRealImage: !!directResult && directResult.includes('images/I/') && !directResult.includes('placeholder'),
+        isWorking: !!directResult || (!wrapperResult.includes('placeholder') && wrapperResult.includes('images'))
+      };
+      
+      console.log('✅ HTML parsing test completed:', testResults);
+      
+    } catch (err) {
+      error = 'Error testing HTML parsing: ' + String(err);
+      console.error('❌ HTML parsing test error:', err);
+    }
+  }
+}
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test HTML Scraping</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input[type="url"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    .btn {
+      background: #007bff;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .result {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 4px;
+      margin-top: 20px;
+    }
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+      padding: 15px;
+      border-radius: 4px;
+      margin-top: 20px;
+    }
+    .success {
+      background: #d4edda;
+      color: #155724;
+      padding: 15px;
+      border-radius: 4px;
+      margin-top: 20px;
+    }
+    .warning {
+      background: #fff3cd;
+      color: #856404;
+      padding: 15px;
+      border-radius: 4px;
+      margin-top: 20px;
+    }
+    .image-preview {
+      max-width: 200px;
+      border: 1px solid #ddd;
+      margin: 10px 0;
+    }
+    code {
+      background: #f1f1f1;
+      padding: 2px 4px;
+      border-radius: 2px;
+      font-family: monospace;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 Test HTML Scraping (Serverless-Compatible)</h1>
+  
+  <p>This tests the lightweight HTML parsing approach that works in serverless environments like Vercel.</p>
+  
+  {error && (
+    <div class="error">
+      <strong>Error:</strong> {error}
+    </div>
+  )}
+  
+  {testResults && (
+    <div class={testResults.isRealImage ? 'success' : testResults.isWorking ? 'warning' : 'error'}>
+      <h3>Test Results:</h3>
+      <p><strong>Amazon URL:</strong> <code>{testResults.amazonUrl}</code></p>
+      <p><strong>ASIN:</strong> <code>{testResults.asin}</code></p>
+      <p><strong>Execution Time:</strong> {testResults.executionTime}ms</p>
+      <p><strong>Real Image Found:</strong> {testResults.isRealImage ? '✅ YES' : '❌ NO'}</p>
+      <p><strong>System Working:</strong> {testResults.isWorking ? '✅ YES' : '❌ NO'}</p>
+      
+      <h4>Direct HTML Parsing Result:</h4>
+      <p><code>{testResults.directResult || 'null'}</code></p>
+      {testResults.directResult && (
+        <img src={testResults.directResult} alt="Direct result" class="image-preview" />
+      )}
+      
+      <h4>Wrapper Function Result:</h4>
+      <p><code>{testResults.wrapperResult || 'null'}</code></p>
+      {testResults.wrapperResult && (
+        <img src={testResults.wrapperResult} alt="Wrapper result" class="image-preview" />
+      )}
+      
+      {testResults.isRealImage && (
+        <div style="background: #d4edda; padding: 10px; border-radius: 4px; margin-top: 10px;">
+          <strong>🎉 Success!</strong> HTML parsing extracted a real Amazon image without Puppeteer!
+        </div>
+      )}
+      
+      {!testResults.isRealImage && testResults.isWorking && (
+        <div style="background: #fff3cd; padding: 10px; border-radius: 4px; margin-top: 10px;">
+          <strong>⚠️ Partial Success:</strong> No direct image found, but fallback URLs might work.
+        </div>
+      )}
+      
+      {!testResults.isWorking && (
+        <div style="background: #f8d7da; padding: 10px; border-radius: 4px; margin-top: 10px;">
+          <strong>❌ Failed:</strong> HTML parsing couldn't extract images. Consider using a scraping service.
+        </div>
+      )}
+    </div>
+  )}
+  
+  <form method="POST">
+    <div class="form-group">
+      <label for="url">Amazon Product URL:</label>
+      <input 
+        type="url" 
+        id="url" 
+        name="url" 
+        required 
+        placeholder="https://www.amazon.com/dp/B123456789"
+        value="https://www.amazon.com/Elmers-Liquid-School-Washable-Ounces/dp/B000J04PNI"
+      />
+    </div>
+    
+    <button type="submit" class="btn">🔍 Test HTML Parsing</button>
+  </form>
+  
+  <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee;">
+    <h3>How This Works:</h3>
+    <ol>
+      <li>Fetches the Amazon page HTML using standard HTTP requests</li>
+      <li>Uses regex patterns to find image URLs in the HTML</li>
+      <li>Falls back to testing constructed image URLs</li>
+      <li>Works in serverless environments (no browser needed)</li>
+    </ol>
+    
+    <h3>If This Doesn't Work:</h3>
+    <p>We can set up a scraping service like <strong>ScrapingBee</strong> ($29/month for 100K requests) that provides browser automation as an API.</p>
+  </div>
+  
+  <p><a href="/admin">← Back to Admin</a></p>
+</body>
+</html> 

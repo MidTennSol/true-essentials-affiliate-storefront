@@ -1,0 +1,380 @@
+---
+// Edit existing product - password protected
+import Header from '../../components/Header.astro';
+import { getProductById, updateProduct, getAllProducts } from '../../lib/airtable';
+
+const isAuthenticated = Astro.cookies.get('admin_auth')?.value === 'authenticated';
+if (!isAuthenticated) {
+  return Astro.redirect('/admin');
+}
+
+let product = null;
+let allProducts = [];
+let error = null;
+let success = null;
+
+// Get product ID from URL
+const productId = Astro.url.searchParams.get('id');
+
+// Get all products for the dropdown
+try {
+  allProducts = await getAllProducts();
+} catch (err) {
+  console.error('Error loading products:', err);
+}
+
+// Load specific product if ID provided
+if (productId) {
+  try {
+    product = await getProductById(productId);
+  } catch (err) {
+    error = 'Product not found: ' + String(err);
+  }
+}
+
+// Handle form submission
+if (Astro.request.method === 'POST') {
+  const formData = await Astro.request.formData();
+  const editProductId = formData.get('productId') as string;
+  
+  if (!editProductId) {
+    error = 'No product selected';
+  } else {
+    try {
+      const updatedData = {
+        title: formData.get('title') as string,
+        description: formData.get('description') as string,
+        imageUrl: formData.get('imageUrl') as string,
+        affiliateUrl: formData.get('affiliateUrl') as string
+      };
+
+      // Remove empty fields
+      Object.keys(updatedData).forEach(key => {
+        if (!updatedData[key]) {
+          delete updatedData[key];
+        }
+      });
+
+      await updateProduct(editProductId, updatedData);
+      success = 'Product updated successfully!';
+      
+      // Reload the product
+      product = await getProductById(editProductId);
+      
+    } catch (err) {
+      error = 'Error updating product: ' + String(err);
+    }
+  }
+}
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Product - Admin Dashboard</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      margin: 0;
+      background: #f5f5f5;
+    }
+    .main-container {
+      padding: 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #eee;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+    .btn {
+      background: #007bff;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      margin-right: 10px;
+      font-size: 16px;
+    }
+    .btn:hover {
+      background: #0056b3;
+    }
+    .btn-success {
+      background: #28a745;
+    }
+    .btn-success:hover {
+      background: #218838;
+    }
+    .btn-secondary {
+      background: #6c757d;
+    }
+    .btn-secondary:hover {
+      background: #545b62;
+    }
+    .error {
+      color: #dc3545;
+      background: #f8d7da;
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      border: 1px solid #f5c6cb;
+    }
+    .success {
+      color: #155724;
+      background: #d4edda;
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      border: 1px solid #c3e6cb;
+    }
+    .current-image {
+      max-width: 200px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin: 10px 0;
+    }
+    .product-info {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+    .quick-actions {
+      background: #fff3cd;
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+    .help-text {
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <Header />
+  <div class="main-container">
+    <div class="container">
+      <div class="header">
+        <h1>✏️ Edit Product</h1>
+        <div>
+          <a href="/admin" class="btn btn-secondary">Back to Dashboard</a>
+          <a href="/admin/add-product" class="btn">Add New Product</a>
+        </div>
+      </div>
+
+      {error && (
+        <div class="error">
+          <strong>Error:</strong> {error}
+        </div>
+      )}
+
+      {success && (
+        <div class="success">
+          <strong>Success:</strong> {success}
+        </div>
+      )}
+
+      {!product && (
+        <div>
+          <h3>Select Product to Edit:</h3>
+          <div class="form-group">
+            <label for="productSelect">Choose a product:</label>
+            <select id="productSelect" onchange="window.location.href = '/admin/edit-product?id=' + this.value">
+              <option value="">-- Select Product --</option>
+              {allProducts.map(p => (
+                <option value={p.id}>
+                  {p.fields?.Title || 'Untitled'} {p.fields?.['Image URL']?.includes('placeholder') ? '🖼️❌' : '🖼️✅'}
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          <div class="quick-actions">
+            <h4>💡 Quick Filters:</h4>
+            <button onclick="filterProducts('placeholder')" class="btn btn-secondary">
+              Show Products with Placeholder Images
+            </button>
+          </div>
+        </div>
+      )}
+
+      {product && (
+        <div>
+          <div class="product-info">
+            <h3>📦 Current Product Details</h3>
+            <p><strong>ID:</strong> {productId}</p>
+            <p><strong>Title:</strong> {product.fields?.Title || 'No title'}</p>
+            <p><strong>Current Image:</strong></p>
+            {product.fields?.['Image URL'] && (
+              <img src={product.fields['Image URL']} alt="Current product image" class="current-image" />
+            )}
+            <p><strong>Is Placeholder:</strong> {product.fields?.['Image URL']?.includes('placeholder') ? '❌ Yes' : '✅ No'}</p>
+          </div>
+
+          <form method="POST">
+            <input type="hidden" name="productId" value={productId} />
+            
+            <div class="form-group">
+              <label for="title">Product Title:</label>
+              <input 
+                type="text" 
+                id="title" 
+                name="title" 
+                value={product.fields?.Title || ''}
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="description">Description:</label>
+              <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <button type="button" onclick="regenerateDescription()" class="btn" style="background: #17a2b8; font-size: 14px; padding: 8px 12px;">
+                  🤖 AI Regenerate
+                </button>
+                <span id="regenerateStatus" style="align-self: center; color: #666; font-size: 14px;"></span>
+              </div>
+              <textarea 
+                id="description" 
+                name="description"
+                placeholder="Enter improved product description..."
+              >{product.fields?.Description || ''}</textarea>
+              <div class="help-text">💡 Tip: Use AI Regenerate for enhanced copy, or edit manually for custom descriptions</div>
+            </div>
+
+            <div class="form-group">
+              <label for="imageUrl">Image URL:</label>
+              <input 
+                type="url" 
+                id="imageUrl" 
+                name="imageUrl" 
+                value={product.fields?.['Image URL'] || ''}
+                placeholder="https://images-na.ssl-images-amazon.com/images/I/..."
+              />
+              <div class="help-text">
+                💡 Tips for finding real Amazon images:
+                <br>• Go to the Amazon product page
+                <br>• Right-click the main image → "Copy image address"
+                <br>• Paste the URL here
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="affiliateUrl">Affiliate URL:</label>
+              <input 
+                type="url" 
+                id="affiliateUrl" 
+                name="affiliateUrl" 
+                value={product.fields?.['Affiliate URL'] || ''}
+              />
+            </div>
+
+            <button type="submit" class="btn btn-success">💾 Update Product</button>
+            <a href="/admin/edit-product" class="btn btn-secondary">🔄 Edit Another</a>
+          </form>
+        </div>
+      )}
+    </div>
+  </div>
+
+  <script>
+    function filterProducts(filter) {
+      const select = document.getElementById('productSelect');
+      const options = select.getElementsByTagName('option');
+      
+      for (let i = 1; i < options.length; i++) {
+        const option = options[i];
+        if (filter === 'placeholder' && option.text.includes('🖼️❌')) {
+          option.style.display = 'block';
+          option.style.backgroundColor = '#fff3cd';
+        } else if (filter === 'placeholder') {
+          option.style.display = 'none';
+        }
+      }
+    }
+
+    async function regenerateDescription() {
+      const productId = new URLSearchParams(window.location.search).get('id');
+      if (!productId) {
+        alert('No product selected');
+        return;
+      }
+
+      const statusSpan = document.getElementById('regenerateStatus');
+      const button = document.querySelector('[onclick="regenerateDescription()"]');
+      const textarea = document.getElementById('description');
+
+      // Show loading state
+      statusSpan.textContent = '🔄 Generating...';
+      button.disabled = true;
+      button.textContent = '⏳ Generating...';
+
+      try {
+        const formData = new FormData();
+        formData.append('productId', productId);
+
+        const response = await fetch('/admin/regenerate-description', {
+          method: 'POST',
+          body: formData
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          textarea.value = result.newDescription;
+          statusSpan.textContent = '✅ Generated!';
+          statusSpan.style.color = '#28a745';
+          
+          // Clear status after 3 seconds
+          setTimeout(() => {
+            statusSpan.textContent = '';
+          }, 3000);
+        } else {
+          throw new Error(result.error || 'Failed to regenerate');
+        }
+      } catch (error) {
+        console.error('Error regenerating description:', error);
+        statusSpan.textContent = '❌ Error: ' + error.message;
+        statusSpan.style.color = '#dc3545';
+      } finally {
+        button.disabled = false;
+        button.textContent = '🤖 AI Regenerate';
+      }
+    }
+  </script>
+</body>
+</html> 

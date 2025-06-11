@@ -1,0 +1,258 @@
+---
+// Debug Puppeteer installation and functionality
+let debugResults = null;
+let error = null;
+
+if (Astro.request.method === 'POST') {
+  try {
+    console.log('🔧 Starting Puppeteer debug test...');
+    
+    // Test 1: Can we import Puppeteer?
+    let puppeteerImported = false;
+    try {
+      const puppeteer = await import('puppeteer');
+      puppeteerImported = true;
+      console.log('✅ Puppeteer imported successfully');
+    } catch (importError) {
+      console.error('❌ Puppeteer import failed:', importError);
+    }
+    
+    // Test 2: Can we launch browser?
+    let browserLaunched = false;
+    let browserError = null;
+    let chromeVersion = null;
+    try {
+      const puppeteer = await import('puppeteer');
+      const browser = await puppeteer.default.launch({
+        headless: true,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--disable-gpu'
+        ]
+      });
+      
+      const version = await browser.version();
+      chromeVersion = version;
+      browserLaunched = true;
+      
+      await browser.close();
+      console.log('✅ Browser launched and closed successfully:', version);
+    } catch (launchError) {
+      browserError = String(launchError);
+      console.error('❌ Browser launch failed:', launchError);
+    }
+    
+    // Test 3: Test simple page navigation
+    let pageNavigation = false;
+    let navigationError = null;
+    try {
+      if (browserLaunched) {
+        const puppeteer = await import('puppeteer');
+        const browser = await puppeteer.default.launch({
+          headless: true,
+          args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+        });
+        
+        const page = await browser.newPage();
+        await page.goto('https://www.google.com', { waitUntil: 'domcontentloaded', timeout: 10000 });
+        
+        const title = await page.title();
+        if (title.includes('Google')) {
+          pageNavigation = true;
+          console.log('✅ Page navigation successful');
+        }
+        
+        await browser.close();
+      }
+    } catch (navError) {
+      navigationError = String(navError);
+      console.error('❌ Page navigation failed:', navError);
+    }
+    
+    // Test 4: Test Amazon-specific scraping
+    let amazonScraping = false;
+    let amazonError = null;
+    let extractedImage = null;
+    try {
+      if (pageNavigation) {
+        const { scrapeAmazonImage } = await import('../../lib/amazon-scraper');
+        const testUrl = 'https://www.amazon.com/Elmers-Liquid-School-Washable-Ounces/dp/B000J04PNI';
+        extractedImage = await scrapeAmazonImage(testUrl);
+        
+        if (extractedImage && !extractedImage.includes('placeholder')) {
+          amazonScraping = true;
+          console.log('✅ Amazon scraping successful:', extractedImage);
+        } else {
+          amazonError = 'No real image extracted (got placeholder or null)';
+        }
+      }
+    } catch (scrapingError) {
+      amazonError = String(scrapingError);
+      console.error('❌ Amazon scraping failed:', scrapingError);
+    }
+    
+    debugResults = {
+      puppeteerImported,
+      browserLaunched,
+      browserError,
+      chromeVersion,
+      pageNavigation,
+      navigationError,
+      amazonScraping,
+      amazonError,
+      extractedImage
+    };
+    
+  } catch (err) {
+    error = 'Debug test failed: ' + String(err);
+    console.error('❌ Debug test error:', err);
+  }
+}
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Puppeteer Debug Test</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .test-result {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 4px;
+      margin: 10px 0;
+      border-left: 4px solid #6c757d;
+    }
+    .test-success {
+      background: #d4edda;
+      border-left-color: #28a745;
+      color: #155724;
+    }
+    .test-failure {
+      background: #f8d7da;
+      border-left-color: #dc3545;
+      color: #721c24;
+    }
+    .btn {
+      background: #007bff;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    code {
+      background: #f1f1f1;
+      padding: 2px 4px;
+      border-radius: 2px;
+      font-family: monospace;
+      word-break: break-all;
+      font-size: 12px;
+    }
+    .image-preview {
+      max-width: 200px;
+      border: 1px solid #ddd;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔧 Puppeteer Debug Test</h1>
+  
+  <p>This test will check if Puppeteer can run in your environment and identify what's causing image extraction failures.</p>
+  
+  {error && (
+    <div class="test-result test-failure">
+      <strong>Overall Error:</strong> {error}
+    </div>
+  )}
+  
+  {!debugResults && (
+    <form method="POST">
+      <button type="submit" class="btn">🚀 Run Debug Tests</button>
+    </form>
+  )}
+  
+  {debugResults && (
+    <div>
+      <h2>🔍 Debug Results</h2>
+      
+      <div class={`test-result ${debugResults.puppeteerImported ? 'test-success' : 'test-failure'}`}>
+        <strong>Test 1: Puppeteer Import</strong><br/>
+        Status: {debugResults.puppeteerImported ? '✅ SUCCESS' : '❌ FAILED'}<br/>
+        {!debugResults.puppeteerImported && 'Puppeteer module could not be imported'}
+      </div>
+      
+      <div class={`test-result ${debugResults.browserLaunched ? 'test-success' : 'test-failure'}`}>
+        <strong>Test 2: Browser Launch</strong><br/>
+        Status: {debugResults.browserLaunched ? '✅ SUCCESS' : '❌ FAILED'}<br/>
+        {debugResults.chromeVersion && `Chrome Version: ${debugResults.chromeVersion}`}<br/>
+        {debugResults.browserError && <code>{debugResults.browserError}</code>}
+      </div>
+      
+      <div class={`test-result ${debugResults.pageNavigation ? 'test-success' : 'test-failure'}`}>
+        <strong>Test 3: Page Navigation</strong><br/>
+        Status: {debugResults.pageNavigation ? '✅ SUCCESS' : '❌ FAILED'}<br/>
+        {debugResults.navigationError && <code>{debugResults.navigationError}</code>}
+      </div>
+      
+      <div class={`test-result ${debugResults.amazonScraping ? 'test-success' : 'test-failure'}`}>
+        <strong>Test 4: Amazon Image Scraping</strong><br/>
+        Status: {debugResults.amazonScraping ? '✅ SUCCESS' : '❌ FAILED'}<br/>
+        {debugResults.amazonError && <code>{debugResults.amazonError}</code>}<br/>
+        {debugResults.extractedImage && (
+          <div>
+            <strong>Extracted Image:</strong><br/>
+            <code>{debugResults.extractedImage}</code><br/>
+            <img src={debugResults.extractedImage} alt="Extracted" class="image-preview" />
+          </div>
+        )}
+      </div>
+      
+      <div style="margin-top: 30px; padding: 20px; background: #fff3cd; border-radius: 4px;">
+        <h3>💡 Troubleshooting Guide</h3>
+        
+        {!debugResults.puppeteerImported && (
+          <p><strong>Fix:</strong> Run <code>npm install puppeteer</code> to install Puppeteer</p>
+        )}
+        
+        {debugResults.puppeteerImported && !debugResults.browserLaunched && (
+          <div>
+            <p><strong>Browser Launch Failed:</strong></p>
+            <ul>
+              <li>If on Windows: Chrome might not be in PATH</li>
+              <li>If on Linux: Install Chrome dependencies</li>
+              <li>If on server: Server might not support GUI applications</li>
+            </ul>
+          </div>
+        )}
+        
+        {debugResults.browserLaunched && !debugResults.pageNavigation && (
+          <p><strong>Navigation Failed:</strong> Network issues or server restrictions</p>
+        )}
+        
+        {debugResults.pageNavigation && !debugResults.amazonScraping && (
+          <p><strong>Amazon Scraping Failed:</strong> Amazon blocked request or page structure changed</p>
+        )}
+      </div>
+      
+      <form method="POST" style="margin-top: 20px;">
+        <button type="submit" class="btn">🔄 Re-run Tests</button>
+      </form>
+    </div>
+  )}
+  
+  <p style="margin-top: 40px;"><a href="/admin">← Back to Admin</a></p>
+</body>
+</html> 

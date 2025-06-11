@@ -72,7 +72,16 @@ export function createCleanTitle(rawTitle: string, maxLength: number = 50): stri
 export function generateSimpleDescription(title: string, asin: string): string {
   const cleanTitle = title.replace(/\.\.\.$/, '').trim();
   
-  return `Check out this ${cleanTitle.toLowerCase()} on Amazon. This product offers great value and quality. Click below to view full details, customer reviews, and current pricing on Amazon.`;
+  // Create more engaging simple descriptions
+  const templates = [
+    `Discover this ${cleanTitle.toLowerCase()} that customers are loving on Amazon. With great reviews and competitive pricing, it's become a popular choice for those seeking quality and value. See why it's trending and check current deals on Amazon!`,
+    `Looking for a reliable ${cleanTitle.toLowerCase()}? This Amazon bestseller delivers on both quality and value. Join thousands of satisfied customers who've made this their go-to choice. View details and current pricing on Amazon now!`,
+    `This ${cleanTitle.toLowerCase()} is getting attention on Amazon for all the right reasons. Customers love its quality, value, and performance. Don't miss out on what could be your next favorite purchase. Check it out on Amazon today!`
+  ];
+  
+  // Use ASIN to consistently pick the same template for each product
+  const templateIndex = asin ? parseInt(asin.slice(-1), 36) % templates.length : 0;
+  return templates[templateIndex] || templates[0];
 }
 
 /**
@@ -92,56 +101,91 @@ function getOpenAIClient(): OpenAI | null {
 /**
  * Generate enhanced description using AI (optional enhancement)
  */
-export async function generateEnhancedDescription(title: string): Promise<string> {
+export async function generateEnhancedDescription(title: string, asin?: string): Promise<string> {
   const openai = getOpenAIClient();
   
   if (!openai) {
-    return generateSimpleDescription(title, '');
+    console.log('OpenAI API key not found, using simple description');
+    return generateSimpleDescription(title, asin || '');
   }
 
   try {
+    console.log(`Generating AI description for: ${title}`);
+    
     const response = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [
         {
           role: 'system',
-          content: 'You are a helpful assistant that writes brief, appealing product descriptions for affiliate marketing. Keep descriptions under 200 characters and focus on benefits.'
+          content: `You are an expert e-commerce copywriter specializing in Amazon affiliate marketing. Create compelling product descriptions that convert browsers into buyers.
+
+          WRITING STYLE:
+          - Conversational and engaging tone
+          - Focus on customer benefits, not just features
+          - Use emotional triggers and urgency
+          - Include social proof elements
+          - End with a clear call-to-action
+          - Keep under 120 words for optimal readability
+
+          AVOID:
+          - Technical jargon
+          - Generic phrases like "high quality" 
+          - Overly salesy language
+          - Excessive punctuation or ALL CAPS`
         },
         {
           role: 'user',
-          content: `Write a brief, appealing description for: "${title}". Focus on benefits and value. Keep it under 200 characters.`
+          content: `Write a compelling product description for: "${title}"
+
+          Focus on:
+          - Why customers NEED this product
+          - What problems it solves
+          - The experience they'll have using it
+          - Create urgency without being pushy
+          - End with "Check it out on Amazon!" or similar natural CTA
+          
+          Keep it under 120 words and make every word count.`
         }
       ],
-      max_tokens: 100,
-      temperature: 0.7,
+      max_tokens: 180,
+      temperature: 0.75,
     });
 
     const description = response.choices[0]?.message?.content?.trim();
-    return description || generateSimpleDescription(title, '');
+    
+    // Validate the description meets our criteria
+    if (description && description.length > 30 && description.length < 600 && !description.includes('I cannot') && !description.includes('I\'m unable')) {
+      console.log(`✅ AI description generated: ${description.length} characters`);
+      return description;
+    } else {
+      console.warn('AI description failed validation, using fallback');
+      return generateSimpleDescription(title, asin || '');
+    }
   } catch (error) {
     console.error('Error generating enhanced description:', error);
-    return generateSimpleDescription(title, '');
+    // Return simple description as fallback
+    return generateSimpleDescription(title, asin || '');
   }
 }
 
 /**
- * Generate product content using simple, reliable methods
+ * Generate product content using enhanced AI descriptions
  */
 export async function generateProductContent(asin: string, amazonUrl?: string): Promise<{
   title: string;
   description: string;
   slug: string;
 }> {
-  console.log(`Generating content for ASIN: ${asin}`);
+  console.log(`Generating enhanced content for ASIN: ${asin}`);
   
   try {
     // Extract title using smart extraction
     const title = await extractAmazonTitle(amazonUrl || '', asin);
     console.log(`Generated title: ${title}`);
     
-    // Generate simple description
-    const description = generateSimpleDescription(title, asin);
-    console.log(`Generated description length: ${description.length} characters`);
+    // Generate enhanced AI description (with fallback to simple)
+    const description = await generateEnhancedDescription(title, asin);
+    console.log(`Generated enhanced description length: ${description.length} characters`);
     
     // Generate slug from title
     const slug = generateSlug(title);
