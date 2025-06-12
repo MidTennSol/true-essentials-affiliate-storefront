@@ -116,6 +116,7 @@ import Header from '../components/Header.astro';
 			--radius-lg: 0.75rem;
 			--radius-xl: 1rem;
 			--radius-2xl: 1.5rem;
+			--radius-3xl: 2rem;
 			
 			/* Shadows */
 			--shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
@@ -882,6 +883,470 @@ import Header from '../components/Header.astro';
 				grid-template-columns: 1fr;
 			}
 		}
+
+		/* ==========================================================================
+		   TRUST & CREDIBILITY SECTION
+		   ========================================================================== */
+
+		.trust-section {
+			background: linear-gradient(135deg, 
+				var(--color-primary-50) 0%, 
+				var(--color-background) 50%, 
+				var(--color-primary-50) 100%);
+			padding: var(--space-20) 0;
+			margin: var(--space-20) 0;
+			border-radius: var(--radius-3xl);
+			position: relative;
+			overflow: hidden;
+		}
+
+		.trust-section::before {
+			content: '';
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23396f8d' fill-opacity='0.03'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+			opacity: 0.5;
+		}
+
+		.trust-content {
+			position: relative;
+			z-index: 2;
+		}
+
+		.trust-header {
+			text-align: center;
+			margin-bottom: var(--space-16);
+		}
+
+		.trust-title {
+			font-size: var(--text-4xl);
+			font-weight: 600;
+			color: var(--color-text-primary);
+			margin-bottom: var(--space-4);
+			font-family: var(--font-display);
+		}
+
+		.trust-subtitle {
+			font-size: var(--text-lg);
+			color: var(--color-text-secondary);
+			max-width: 600px;
+			margin: 0 auto;
+			line-height: 1.6;
+		}
+
+		/* Trust Badges */
+		.trust-badges {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+			gap: var(--space-6);
+			margin-bottom: var(--space-16);
+		}
+
+		.trust-badge {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: var(--space-3);
+			background: var(--color-background);
+			padding: var(--space-4) var(--space-6);
+			border-radius: var(--radius-xl);
+			box-shadow: var(--shadow-sm);
+			border: 1px solid var(--color-border);
+			transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		}
+
+		.trust-badge:hover {
+			transform: translateY(-2px);
+			box-shadow: var(--shadow-md);
+			border-color: var(--color-primary-200);
+		}
+
+		.trust-badge-icon {
+			font-size: var(--text-2xl);
+			color: var(--color-primary-600);
+		}
+
+		.trust-badge-text {
+			font-weight: 500;
+			color: var(--color-text-primary);
+			font-size: var(--text-sm);
+		}
+
+		/* Testimonials */
+		.testimonials {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+			gap: var(--space-8);
+			margin-bottom: var(--space-16);
+		}
+
+		.testimonial {
+			background: var(--color-background);
+			padding: var(--space-8);
+			border-radius: var(--radius-2xl);
+			box-shadow: var(--shadow-md);
+			border: 1px solid var(--color-border);
+			position: relative;
+			transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+		}
+
+		.testimonial::before {
+			content: '"';
+			position: absolute;
+			top: var(--space-4);
+			left: var(--space-6);
+			font-size: 4rem;
+			color: var(--color-primary-200);
+			font-family: var(--font-display);
+			line-height: 1;
+		}
+
+		.testimonial:hover {
+			transform: translateY(-4px);
+			box-shadow: var(--shadow-lg);
+			border-color: var(--color-primary-200);
+		}
+
+		.testimonial-content {
+			position: relative;
+			z-index: 2;
+			margin-top: var(--space-4);
+		}
+
+		.testimonial-text {
+			font-size: var(--text-base);
+			line-height: 1.7;
+			color: var(--color-text-secondary);
+			margin-bottom: var(--space-6);
+			font-style: italic;
+		}
+
+		.testimonial-author {
+			display: flex;
+			align-items: center;
+			gap: var(--space-4);
+		}
+
+		.testimonial-avatar {
+			width: 48px;
+			height: 48px;
+			border-radius: 50%;
+			background: linear-gradient(135deg, var(--color-primary-400), var(--color-primary-600));
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			color: white;
+			font-weight: 600;
+			font-size: var(--text-lg);
+		}
+
+		.testimonial-info h4 {
+			font-weight: 600;
+			color: var(--color-text-primary);
+			margin-bottom: var(--space-1);
+		}
+
+		.testimonial-info p {
+			font-size: var(--text-sm);
+			color: var(--color-text-secondary);
+			margin: 0;
+		}
+
+		.testimonial-rating {
+			display: flex;
+			gap: var(--space-1);
+			margin-bottom: var(--space-4);
+		}
+
+		.star {
+			color: #fbbf24;
+			font-size: var(--text-lg);
+		}
+
+		/* Social Proof Stats */
+		.social-proof {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+			gap: var(--space-8);
+			text-align: center;
+		}
+
+		.proof-stat {
+			padding: var(--space-4);
+		}
+
+		.proof-number {
+			font-size: var(--text-4xl);
+			font-weight: 700;
+			color: var(--color-primary-600);
+			font-family: var(--font-display);
+			margin-bottom: var(--space-2);
+		}
+
+		.proof-label {
+			font-size: var(--text-sm);
+			color: var(--color-text-secondary);
+			font-weight: 500;
+			text-transform: uppercase;
+			letter-spacing: 0.05em;
+		}
+
+		/* Mobile Responsive */
+		@media (max-width: 768px) {
+			.trust-section {
+				padding: var(--space-16) 0;
+				margin: var(--space-16) 0;
+			}
+
+			.trust-title {
+				font-size: var(--text-3xl);
+			}
+
+			.testimonials {
+				grid-template-columns: 1fr;
+			}
+
+			.trust-badges {
+				grid-template-columns: 1fr;
+			}
+
+			.social-proof {
+				grid-template-columns: repeat(2, 1fr);
+			}
+		}
+
+		/* ==========================================================================
+		   CTA OPTIMIZATION & CONVERSION ELEMENTS
+		   ========================================================================== */
+
+		.cta-section {
+			background: linear-gradient(135deg, 
+				var(--color-primary-600) 0%, 
+				var(--color-primary-700) 50%, 
+				var(--color-primary-800) 100%);
+			color: white;
+			padding: var(--space-20) 0;
+			margin: var(--space-20) 0;
+			border-radius: var(--radius-3xl);
+			position: relative;
+			overflow: hidden;
+		}
+
+		.cta-section::before {
+			content: '';
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M50 50c0-5.5 4.5-10 10-10s10 4.5 10 10-4.5 10-10 10-10-4.5-10-10zm-20 0c0-5.5 4.5-10 10-10s10 4.5 10 10-4.5 10-10 10-10-4.5-10-10zm-20 0c0-5.5 4.5-10 10-10s10 4.5 10 10-4.5 10-10 10-10-4.5-10-10z'/%3E%3C/g%3E%3C/svg%3E");
+			animation: float 20s ease-in-out infinite;
+		}
+
+		@keyframes float {
+			0%, 100% { transform: translateY(0px) rotate(0deg); }
+			50% { transform: translateY(-20px) rotate(180deg); }
+		}
+
+		.cta-content {
+			position: relative;
+			z-index: 2;
+			text-align: center;
+		}
+
+		.cta-badge {
+			display: inline-block;
+			background: rgba(255, 255, 255, 0.2);
+			backdrop-filter: blur(10px);
+			padding: var(--space-2) var(--space-4);
+			border-radius: var(--radius-full);
+			font-size: var(--text-sm);
+			font-weight: 500;
+			margin-bottom: var(--space-6);
+			border: 1px solid rgba(255, 255, 255, 0.3);
+		}
+
+		.cta-title {
+			font-size: var(--text-5xl);
+			font-weight: 700;
+			margin-bottom: var(--space-6);
+			font-family: var(--font-display);
+			line-height: 1.1;
+		}
+
+		.cta-description {
+			font-size: var(--text-xl);
+			margin-bottom: var(--space-10);
+			opacity: 0.9;
+			max-width: 600px;
+			margin-left: auto;
+			margin-right: auto;
+			line-height: 1.6;
+		}
+
+		.cta-buttons {
+			display: flex;
+			gap: var(--space-4);
+			justify-content: center;
+			align-items: center;
+			flex-wrap: wrap;
+			margin-bottom: var(--space-8);
+		}
+
+		.cta-primary {
+			background: white;
+			color: var(--color-primary-700);
+			padding: var(--space-4) var(--space-8);
+			border-radius: var(--radius-xl);
+			text-decoration: none;
+			font-weight: 600;
+			font-size: var(--text-lg);
+			display: inline-flex;
+			align-items: center;
+			gap: var(--space-2);
+			transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+			box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+			position: relative;
+			overflow: hidden;
+		}
+
+		.cta-primary::before {
+			content: '';
+			position: absolute;
+			top: 0;
+			left: -100%;
+			width: 100%;
+			height: 100%;
+			background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+			transition: left 0.5s;
+		}
+
+		.cta-primary:hover::before {
+			left: 100%;
+		}
+
+		.cta-primary:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+			color: var(--color-primary-800);
+		}
+
+		.cta-secondary {
+			background: transparent;
+			color: white;
+			padding: var(--space-4) var(--space-8);
+			border: 2px solid rgba(255, 255, 255, 0.3);
+			border-radius: var(--radius-xl);
+			text-decoration: none;
+			font-weight: 500;
+			font-size: var(--text-lg);
+			display: inline-flex;
+			align-items: center;
+			gap: var(--space-2);
+			transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+			backdrop-filter: blur(10px);
+		}
+
+		.cta-secondary:hover {
+			background: rgba(255, 255, 255, 0.1);
+			border-color: rgba(255, 255, 255, 0.5);
+			transform: translateY(-2px);
+		}
+
+		.cta-urgency {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: var(--space-2);
+			font-size: var(--text-sm);
+			opacity: 0.8;
+		}
+
+		.urgency-icon {
+			animation: pulse 2s infinite;
+		}
+
+		@keyframes pulse {
+			0%, 100% { opacity: 1; }
+			50% { opacity: 0.5; }
+		}
+
+		/* Floating CTA */
+		.floating-cta {
+			position: fixed;
+			bottom: var(--space-6);
+			right: var(--space-6);
+			background: var(--color-primary-600);
+			color: white;
+			padding: var(--space-4) var(--space-6);
+			border-radius: var(--radius-full);
+			text-decoration: none;
+			font-weight: 600;
+			box-shadow: var(--shadow-xl);
+			z-index: 1000;
+			transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+			display: none;
+		}
+
+		.floating-cta:hover {
+			background: var(--color-primary-700);
+			transform: translateY(-2px);
+			box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+		}
+
+		.floating-cta.visible {
+			display: inline-flex;
+			align-items: center;
+			gap: var(--space-2);
+			animation: slideIn 0.3s ease-out;
+		}
+
+		@keyframes slideIn {
+			from {
+				transform: translateX(100px);
+				opacity: 0;
+			}
+			to {
+				transform: translateX(0);
+				opacity: 1;
+			}
+		}
+
+		/* Mobile Responsive */
+		@media (max-width: 768px) {
+			.cta-section {
+				padding: var(--space-16) 0;
+				margin: var(--space-16) 0;
+			}
+
+			.cta-title {
+				font-size: var(--text-4xl);
+			}
+
+			.cta-description {
+				font-size: var(--text-lg);
+			}
+
+			.cta-buttons {
+				flex-direction: column;
+				align-items: stretch;
+			}
+
+			.cta-primary,
+			.cta-secondary {
+				justify-content: center;
+			}
+
+			.floating-cta {
+				bottom: var(--space-4);
+				right: var(--space-4);
+				padding: var(--space-3) var(--space-5);
+				font-size: var(--text-sm);
+			}
+		}
 	</style>
 </head>
 <body>
@@ -998,6 +1463,163 @@ import Header from '../components/Header.astro';
 			</div>
 		</div>
 
+		<div class="trust-section">
+			<div class="container trust-content">
+				<div class="trust-header">
+					<h2 class="trust-title">Trusted by Thousands</h2>
+					<p class="trust-subtitle">
+						Join our community of satisfied customers who trust True Essentials for their shopping needs. 
+						Here's what makes us different and why people choose us.
+					</p>
+				</div>
+
+				<div class="trust-badges">
+					<div class="trust-badge">
+						<div class="trust-badge-icon">🛡️</div>
+						<div class="trust-badge-text">Secure Shopping</div>
+					</div>
+					<div class="trust-badge">
+						<div class="trust-badge-icon">🚚</div>
+						<div class="trust-badge-text">Fast Shipping</div>
+					</div>
+					<div class="trust-badge">
+						<div class="trust-badge-icon">💯</div>
+						<div class="trust-badge-text">Quality Guaranteed</div>
+					</div>
+					<div class="trust-badge">
+						<div class="trust-badge-icon">🎯</div>
+						<div class="trust-badge-text">Expert Curation</div>
+					</div>
+				</div>
+
+				<div class="testimonials">
+					<div class="testimonial">
+						<div class="testimonial-content">
+							<div class="testimonial-rating">
+								<span class="star">★</span>
+								<span class="star">★</span>
+								<span class="star">★</span>
+								<span class="star">★</span>
+								<span class="star">★</span>
+							</div>
+							<p class="testimonial-text">
+								True Essentials has completely changed how I shop online. Every product I've purchased has exceeded my expectations. The curation is spot-on and the quality is consistently excellent.
+							</p>
+							<div class="testimonial-author">
+								<div class="testimonial-avatar">SM</div>
+								<div class="testimonial-info">
+									<h4>Sarah Mitchell</h4>
+									<p>Verified Customer</p>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="testimonial">
+						<div class="testimonial-content">
+							<div class="testimonial-rating">
+								<span class="star">★</span>
+								<span class="star">★</span>
+								<span class="star">★</span>
+								<span class="star">★</span>
+								<span class="star">★</span>
+							</div>
+							<p class="testimonial-text">
+								I love that I don't have to spend hours researching products anymore. True Essentials does all the hard work for me, and I can trust that everything they recommend is worth buying.
+							</p>
+							<div class="testimonial-author">
+								<div class="testimonial-avatar">MJ</div>
+								<div class="testimonial-info">
+									<h4>Michael Johnson</h4>
+									<p>Verified Customer</p>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="testimonial">
+						<div class="testimonial-content">
+							<div class="testimonial-rating">
+								<span class="star">★</span>
+								<span class="star">★</span>
+								<span class="star">★</span>
+								<span class="star">★</span>
+								<span class="star">★</span>
+							</div>
+							<p class="testimonial-text">
+								The customer service is outstanding and the product recommendations are always on point. I've saved so much time and money shopping through True Essentials.
+							</p>
+							<div class="testimonial-author">
+								<div class="testimonial-avatar">EL</div>
+								<div class="testimonial-info">
+									<h4>Emily Lopez</h4>
+									<p>Verified Customer</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="social-proof">
+					<div class="proof-stat">
+						<div class="proof-number">15K+</div>
+						<div class="proof-label">Happy Customers</div>
+					</div>
+					<div class="proof-stat">
+						<div class="proof-number">750+</div>
+						<div class="proof-label">Products Curated</div>
+					</div>
+					<div class="proof-stat">
+						<div class="proof-number">4.9★</div>
+						<div class="proof-label">Average Rating</div>
+					</div>
+					<div class="proof-stat">
+						<div class="proof-number">99%</div>
+						<div class="proof-label">Satisfaction Rate</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="cta-section">
+			<div class="container cta-content">
+				<div class="cta-badge">
+					🔥 Limited Time Offer
+				</div>
+				
+				<h2 class="cta-title">Ready to Transform Your Shopping Experience?</h2>
+				
+				<p class="cta-description">
+					Join thousands of satisfied customers who have discovered the joy of effortless, curated shopping. 
+					Start your journey with True Essentials today and experience the difference quality makes.
+				</p>
+				
+				<div class="cta-buttons">
+					<a href="/products" class="cta-primary">
+						Start Shopping Now
+						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<path d="m9 18 6-6-6-6"/>
+						</svg>
+					</a>
+					
+					<a href="/about" class="cta-secondary">
+						Learn Our Story
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<path d="M8 2v4"/>
+							<path d="M16 2v4"/>
+							<rect width="18" height="18" x="3" y="4" rx="2"/>
+							<path d="M3 10h18"/>
+						</svg>
+					</a>
+				</div>
+				
+				<div class="cta-urgency">
+					<span class="urgency-icon">⏰</span>
+					<span>Free shipping on orders over $50 • 30-day money-back guarantee</span>
+				</div>
+			</div>
+		</div>
+
 		<div class="stats">
 			<h2>Why Choose True Essentials?</h2>
 			<div class="stats-grid">
@@ -1021,11 +1643,56 @@ import Header from '../components/Header.astro';
 		</div>
 	</main>
 
+	<!-- Floating CTA -->
+	<a href="/products" class="floating-cta" id="floatingCta">
+		Shop Now
+		<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+			<path d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5M17 13v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6"/>
+		</svg>
+	</a>
+
 	<footer>
 		<div class="container">
 			<p>&copy; 2024 True Essentials. All rights reserved.</p>
 		</div>
 	</footer>
+
+	<!-- Floating CTA JavaScript -->
+	<script>
+		document.addEventListener('DOMContentLoaded', function() {
+			const floatingCta = document.getElementById('floatingCta');
+			const heroSection = document.querySelector('.hero');
+			
+			function toggleFloatingCta() {
+				if (!heroSection || !floatingCta) return;
+				
+				const heroElement = heroSection as HTMLElement;
+				const heroBottom = heroElement.offsetTop + heroElement.offsetHeight;
+				const scrollPosition = window.scrollY;
+				
+				if (scrollPosition > heroBottom + 200) {
+					floatingCta.classList.add('visible');
+				} else {
+					floatingCta.classList.remove('visible');
+				}
+			}
+			
+			// Throttle scroll events for better performance
+			let ticking = false;
+			function requestTick() {
+				if (!ticking) {
+					requestAnimationFrame(toggleFloatingCta);
+					ticking = true;
+					setTimeout(() => { ticking = false; }, 16);
+				}
+			}
+			
+			window.addEventListener('scroll', requestTick);
+			
+			// Initial check
+			toggleFloatingCta();
+		});
+	</script>
 
 	<!-- JSON-LD structured data for SEO -->
 	<script type="application/ld+json">
