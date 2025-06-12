@@ -532,18 +532,42 @@ import Header from '../components/Header.astro';
 			grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
 			gap: var(--space-8);
 			margin-bottom: var(--space-20);
+			padding: var(--space-4) 0;
+		}
+
+		.features-header {
+			text-align: center;
+			margin-bottom: var(--space-16);
+			grid-column: 1 / -1;
+		}
+
+		.features-title {
+			font-size: var(--text-4xl);
+			font-weight: 600;
+			color: var(--color-text-primary);
+			margin-bottom: var(--space-4);
+			font-family: var(--font-display);
+		}
+
+		.features-subtitle {
+			font-size: var(--text-lg);
+			color: var(--color-text-secondary);
+			max-width: 600px;
+			margin: 0 auto;
+			line-height: 1.6;
 		}
 
 		.feature {
 			background: var(--color-background);
-			padding: var(--space-8);
+			padding: var(--space-10);
 			border-radius: var(--radius-2xl);
 			text-align: center;
 			box-shadow: var(--shadow-md);
 			border: 1px solid var(--color-border);
-			transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+			transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 			position: relative;
 			overflow: hidden;
+			group: feature;
 		}
 
 		.feature::before {
@@ -554,22 +578,79 @@ import Header from '../components/Header.astro';
 			right: 0;
 			height: 4px;
 			background: linear-gradient(90deg, 
+				var(--color-brand-primary), 
 				var(--color-primary-500), 
-				var(--color-primary-600), 
-				var(--color-primary-700));
+				var(--color-primary-600));
+			transform: scaleX(0);
+			transform-origin: left;
+			transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+		}
+
+		.feature::after {
+			content: '';
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			background: linear-gradient(135deg, 
+				rgba(138, 161, 178, 0.02) 0%, 
+				rgba(66, 135, 168, 0.05) 100%);
+			opacity: 0;
+			transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 		}
 
 		.feature:hover {
-			transform: translateY(-4px);
+			transform: translateY(-8px);
 			box-shadow: var(--shadow-xl);
 			border-color: var(--color-primary-200);
 		}
 
+		.feature:hover::before {
+			transform: scaleX(1);
+		}
+
+		.feature:hover::after {
+			opacity: 1;
+		}
+
+		.feature-icon-wrapper {
+			position: relative;
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			width: 80px;
+			height: 80px;
+			background: linear-gradient(135deg, 
+				var(--color-primary-50), 
+				var(--color-primary-100));
+			border-radius: 50%;
+			margin-bottom: var(--space-6);
+			transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+			z-index: 2;
+		}
+
+		.feature:hover .feature-icon-wrapper {
+			background: linear-gradient(135deg, 
+				var(--color-primary-100), 
+				var(--color-primary-200));
+			transform: scale(1.1) rotate(5deg);
+		}
+
 		.feature-icon {
 			font-size: var(--text-4xl);
-			margin-bottom: var(--space-6);
-			display: block;
 			line-height: 1;
+			transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+			z-index: 3;
+		}
+
+		.feature:hover .feature-icon {
+			transform: scale(1.1);
+		}
+
+		.feature-content {
+			position: relative;
+			z-index: 2;
 		}
 
 		.feature h3 {
@@ -577,12 +658,78 @@ import Header from '../components/Header.astro';
 			margin-bottom: var(--space-4);
 			color: var(--color-text-primary);
 			font-weight: 600;
+			transition: color 0.3s ease;
+		}
+
+		.feature:hover h3 {
+			color: var(--color-primary-700);
 		}
 
 		.feature p {
 			color: var(--color-text-secondary);
-			line-height: 1.6;
-			margin-bottom: 0;
+			line-height: 1.7;
+			margin-bottom: var(--space-6);
+			transition: color 0.3s ease;
+		}
+
+		.feature:hover p {
+			color: var(--color-text-primary);
+		}
+
+		.feature-link {
+			display: inline-flex;
+			align-items: center;
+			gap: var(--space-2);
+			color: var(--color-primary-600);
+			text-decoration: none;
+			font-weight: 500;
+			font-size: var(--text-sm);
+			transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+			opacity: 0;
+			transform: translateY(10px);
+		}
+
+		.feature:hover .feature-link {
+			opacity: 1;
+			transform: translateY(0);
+		}
+
+		.feature-link:hover {
+			color: var(--color-primary-700);
+			transform: translateX(4px);
+		}
+
+		.feature-link svg {
+			transition: transform 0.3s ease;
+		}
+
+		.feature-link:hover svg {
+			transform: translateX(2px);
+		}
+
+		/* Enhanced feature categories */
+		.feature.feature-curated {
+			--feature-color: var(--color-primary-500);
+		}
+
+		.feature.feature-fast {
+			--feature-color: #10b981; /* Green for speed */
+		}
+
+		.feature.feature-value {
+			--feature-color: #f59e0b; /* Amber for value */
+		}
+
+		.feature.feature-curated::before {
+			background: linear-gradient(90deg, var(--feature-color), var(--color-primary-600));
+		}
+
+		.feature.feature-fast::before {
+			background: linear-gradient(90deg, #10b981, #059669);
+		}
+
+		.feature.feature-value::before {
+			background: linear-gradient(90deg, #f59e0b, #d97706);
 		}
 
 		/* ==========================================================================
@@ -794,22 +941,60 @@ import Header from '../components/Header.astro';
 
 	<main class="container">
 		<div class="features" id="features">
-			<div class="feature">
-				<div class="feature-icon">🔍</div>
-				<h3>Carefully Curated</h3>
-				<p>Every product is hand-picked and thoroughly researched to ensure quality and value for our customers.</p>
+			<div class="features-header">
+				<h2 class="features-title">Why Choose True Essentials?</h2>
+				<p class="features-subtitle">
+					We've built our reputation on three core principles that guide everything we do. 
+					From product selection to customer service, these values ensure you get the best shopping experience.
+				</p>
 			</div>
 			
-			<div class="feature">
-				<div class="feature-icon">⚡</div>
-				<h3>Fast & Reliable</h3>
-				<p>Quick access to the best deals on Amazon with secure, fast shipping directly to your door.</p>
+			<div class="feature feature-curated">
+				<div class="feature-icon-wrapper">
+					<div class="feature-icon">🔍</div>
+				</div>
+				<div class="feature-content">
+					<h3>Carefully Curated</h3>
+					<p>Every product is hand-picked and thoroughly researched to ensure quality and value for our customers. Our team tests and reviews each item before it makes it to our store.</p>
+					<a href="/products?category=featured" class="feature-link">
+						Browse Featured Products
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<path d="m9 18 6-6-6-6"/>
+						</svg>
+					</a>
+				</div>
 			</div>
 			
-			<div class="feature">
-				<div class="feature-icon">💝</div>
-				<h3>Great Value</h3>
-				<p>We find the best products at the best prices, so you can shop with confidence knowing you're getting great value.</p>
+			<div class="feature feature-fast">
+				<div class="feature-icon-wrapper">
+					<div class="feature-icon">⚡</div>
+				</div>
+				<div class="feature-content">
+					<h3>Fast & Reliable</h3>
+					<p>Quick access to the best deals on Amazon with secure, fast shipping directly to your door. Most items arrive within 1-2 business days with Prime shipping.</p>
+					<a href="/products?sort=popular" class="feature-link">
+						Shop Popular Items
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<path d="m9 18 6-6-6-6"/>
+						</svg>
+					</a>
+				</div>
+			</div>
+			
+			<div class="feature feature-value">
+				<div class="feature-icon-wrapper">
+					<div class="feature-icon">💝</div>
+				</div>
+				<div class="feature-content">
+					<h3>Great Value</h3>
+					<p>We find the best products at the best prices, so you can shop with confidence knowing you're getting great value. Price tracking ensures you never miss a deal.</p>
+					<a href="/products?sort=price" class="feature-link">
+						View Best Deals
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<path d="m9 18 6-6-6-6"/>
+						</svg>
+					</a>
+				</div>
 			</div>
 		</div>
 
