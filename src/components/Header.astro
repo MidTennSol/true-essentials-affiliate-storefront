@@ -8,7 +8,15 @@ const currentPath = Astro.url.pathname;
 <header class="global-header">
   <div class="container">
     <div class="header-content">
-      <a href="/" class="logo">True Essentials</a>
+      <a href="/" class="logo">
+        <img 
+          src="/True Essentials Logo 200x60.svg" 
+          alt="True Essentials - Curated Products for Modern Living"
+          class="logo-image"
+          width="200"
+          height="60"
+        />
+      </a>
       <nav class="main-nav">
         <a href="/" class={currentPath === '/' ? 'nav-link active' : 'nav-link'}>
           Home
@@ -65,13 +73,17 @@ const currentPath = Astro.url.pathname;
     --text-lg: clamp(1.125rem, 1.05rem + 0.37vw, 1.35rem);
     --text-xl: clamp(1.25rem, 1.15rem + 0.5vw, 1.6rem);
     
-    /* Professional Color Palette */
-    --color-primary-50: #f0f9ff;
-    --color-primary-100: #e0f2fe;
-    --color-primary-200: #bae6fd;
-    --color-primary-500: #0ea5e9;
-    --color-primary-600: #0284c7;
-    --color-primary-700: #0369a1;
+         /* True Essentials Brand Color Palette */
+     --color-primary-50: #f0f7fa;
+     --color-primary-100: #daeef4;
+     --color-primary-200: #b8dde9;
+     --color-primary-500: #4287a8;
+     --color-primary-600: #396f8d;
+     --color-primary-700: #335c74;
+     
+     /* True Essentials Logo Colors */
+     --color-brand-primary: #8aa1b2;
+     --color-brand-secondary: #333333;
     
     /* Sophisticated Neutral Palette */
     --color-gray-50: #fafafa;
@@ -148,14 +160,17 @@ const currentPath = Astro.url.pathname;
      ========================================================================== */
 
   .logo {
-    font-family: var(--font-display);
-    font-size: var(--text-xl);
-    font-weight: 600;
-    color: var(--color-primary-700);
+    display: flex;
+    align-items: center;
     text-decoration: none;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    letter-spacing: -0.025em;
     position: relative;
+  }
+
+  .logo-image {
+    height: 40px;
+    width: auto;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .logo::after {
@@ -170,8 +185,11 @@ const currentPath = Astro.url.pathname;
   }
 
   .logo:hover {
-    color: var(--color-primary-600);
     transform: translateY(-1px);
+  }
+
+  .logo:hover .logo-image {
+    transform: scale(1.05);
   }
 
   .logo:hover::after {
@@ -388,8 +406,8 @@ const currentPath = Astro.url.pathname;
       padding: var(--space-3) 0;
     }
 
-    .logo {
-      font-size: var(--text-lg);
+    .logo-image {
+      height: 32px;
     }
 
     .container {
