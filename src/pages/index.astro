@@ -25,170 +25,481 @@ import Header from '../components/Header.astro';
 	
 	<!-- Performance & SEO -->
 	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
 	<meta name="robots" content="index, follow">
 	<meta name="author" content="True Essentials">
 	<link rel="canonical" href="https://yoursite.com/">
 	
 	<style>
+		/* ==========================================================================
+		   DESIGN SYSTEM - PROFESSIONAL TYPOGRAPHY & COLORS
+		   ========================================================================== */
+		
+		:root {
+			/* Typography Scale - Professional Type System */
+			--font-primary: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+			--font-display: 'Playfair Display', Georgia, serif;
+			
+			/* Fluid Typography Scale */
+			--text-xs: clamp(0.75rem, 0.73rem + 0.11vw, 0.8rem);
+			--text-sm: clamp(0.875rem, 0.84rem + 0.18vw, 0.95rem);
+			--text-base: clamp(1rem, 0.95rem + 0.24vw, 1.125rem);
+			--text-lg: clamp(1.125rem, 1.05rem + 0.37vw, 1.35rem);
+			--text-xl: clamp(1.25rem, 1.15rem + 0.5vw, 1.6rem);
+			--text-2xl: clamp(1.5rem, 1.35rem + 0.75vw, 2rem);
+			--text-3xl: clamp(1.875rem, 1.65rem + 1.125vw, 2.625rem);
+			--text-4xl: clamp(2.25rem, 1.95rem + 1.5vw, 3.25rem);
+			--text-5xl: clamp(3rem, 2.55rem + 2.25vw, 4.5rem);
+			
+			/* Professional Color Palette */
+			--color-primary-50: #f0f9ff;
+			--color-primary-100: #e0f2fe;
+			--color-primary-200: #bae6fd;
+			--color-primary-300: #7dd3fc;
+			--color-primary-400: #38bdf8;
+			--color-primary-500: #0ea5e9;
+			--color-primary-600: #0284c7;
+			--color-primary-700: #0369a1;
+			--color-primary-800: #075985;
+			--color-primary-900: #0c4a6e;
+			
+			/* Sophisticated Neutral Palette */
+			--color-gray-50: #fafafa;
+			--color-gray-100: #f4f4f5;
+			--color-gray-200: #e4e4e7;
+			--color-gray-300: #d4d4d8;
+			--color-gray-400: #a1a1aa;
+			--color-gray-500: #71717a;
+			--color-gray-600: #52525b;
+			--color-gray-700: #3f3f46;
+			--color-gray-800: #27272a;
+			--color-gray-900: #18181b;
+			
+			/* Semantic Colors */
+			--color-background: #ffffff;
+			--color-surface: var(--color-gray-50);
+			--color-text-primary: var(--color-gray-900);
+			--color-text-secondary: var(--color-gray-600);
+			--color-text-muted: var(--color-gray-500);
+			--color-border: var(--color-gray-200);
+			
+			/* Spacing Scale */
+			--space-px: 1px;
+			--space-0-5: 0.125rem;
+			--space-1: 0.25rem;
+			--space-2: 0.5rem;
+			--space-3: 0.75rem;
+			--space-4: 1rem;
+			--space-5: 1.25rem;
+			--space-6: 1.5rem;
+			--space-8: 2rem;
+			--space-10: 2.5rem;
+			--space-12: 3rem;
+			--space-16: 4rem;
+			--space-20: 5rem;
+			--space-24: 6rem;
+			
+			/* Border Radius */
+			--radius-sm: 0.375rem;
+			--radius-md: 0.5rem;
+			--radius-lg: 0.75rem;
+			--radius-xl: 1rem;
+			--radius-2xl: 1.5rem;
+			
+			/* Shadows */
+			--shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+			--shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+			--shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+			--shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+		}
+
+		/* ==========================================================================
+		   RESET & BASE STYLES
+		   ========================================================================== */
+		
 		* {
 			margin: 0;
 			padding: 0;
 			box-sizing: border-box;
 		}
 
-		body {
-			font-family: system-ui, -apple-system, sans-serif;
-			line-height: 1.6;
-			color: #333;
-			background-color: #f8f9fa;
+		*::before,
+		*::after {
+			box-sizing: border-box;
 		}
+
+		html {
+			line-height: 1.15;
+			-webkit-text-size-adjust: 100%;
+		}
+
+		body {
+			font-family: var(--font-primary);
+			font-size: var(--text-base);
+			line-height: 1.7;
+			color: var(--color-text-primary);
+			background-color: var(--color-surface);
+			font-weight: 400;
+			-webkit-font-smoothing: antialiased;
+			-moz-osx-font-smoothing: grayscale;
+		}
+
+		/* ==========================================================================
+		   TYPOGRAPHY SYSTEM
+		   ========================================================================== */
+		
+		h1, h2, h3, h4, h5, h6 {
+			font-family: var(--font-display);
+			font-weight: 600;
+			line-height: 1.2;
+			color: var(--color-text-primary);
+			margin-bottom: var(--space-4);
+			letter-spacing: -0.025em;
+		}
+
+		h1 {
+			font-size: var(--text-5xl);
+			font-weight: 700;
+			letter-spacing: -0.05em;
+		}
+
+		h2 {
+			font-size: var(--text-4xl);
+			font-weight: 600;
+		}
+
+		h3 {
+			font-size: var(--text-2xl);
+			font-weight: 600;
+		}
+
+		h4 {
+			font-size: var(--text-xl);
+			font-weight: 500;
+		}
+
+		p {
+			font-size: var(--text-base);
+			line-height: 1.7;
+			color: var(--color-text-secondary);
+			margin-bottom: var(--space-4);
+		}
+
+		.text-large {
+			font-size: var(--text-lg);
+			line-height: 1.6;
+		}
+
+		.text-small {
+			font-size: var(--text-sm);
+			line-height: 1.5;
+		}
+
+		.text-xs {
+			font-size: var(--text-xs);
+			line-height: 1.4;
+		}
+
+		.font-display {
+			font-family: var(--font-display);
+		}
+
+		.font-medium {
+			font-weight: 500;
+		}
+
+		.font-semibold {
+			font-weight: 600;
+		}
+
+		.font-bold {
+			font-weight: 700;
+		}
+
+		/* ==========================================================================
+		   LAYOUT COMPONENTS
+		   ========================================================================== */
 
 		.container {
 			max-width: 1200px;
 			margin: 0 auto;
-			padding: 0 1rem;
+			padding-left: var(--space-4);
+			padding-right: var(--space-4);
 		}
 
-
+		/* ==========================================================================
+		   HERO SECTION - PROFESSIONAL DESIGN
+		   ========================================================================== */
 
 		.hero {
+			position: relative;
 			text-align: center;
-			padding: 4rem 0;
-			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			padding: var(--space-24) 0;
+			background: linear-gradient(135deg, 
+				var(--color-primary-600) 0%, 
+				var(--color-primary-800) 50%, 
+				var(--color-primary-900) 100%);
 			color: white;
-			margin-bottom: 4rem;
+			margin-bottom: var(--space-20);
+			overflow: hidden;
+		}
+
+		.hero::before {
+			content: '';
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			background: linear-gradient(45deg, 
+				rgba(255,255,255,0.1) 25%, 
+				transparent 25%,
+				transparent 75%, 
+				rgba(255,255,255,0.1) 75%),
+				linear-gradient(45deg, 
+				rgba(255,255,255,0.1) 25%, 
+				transparent 25%,
+				transparent 75%, 
+				rgba(255,255,255,0.1) 75%);
+			background-size: 60px 60px;
+			background-position: 0 0, 30px 30px;
+			opacity: 0.3;
+			animation: shimmer 20s linear infinite;
+		}
+
+		@keyframes shimmer {
+			0% { transform: translateX(-100px) translateY(-100px); }
+			100% { transform: translateX(100px) translateY(100px); }
+		}
+
+		.hero-content {
+			position: relative;
+			z-index: 2;
 		}
 
 		.hero h1 {
-			font-size: 3rem;
+			font-size: var(--text-5xl);
 			font-weight: 700;
-			margin-bottom: 1rem;
-			line-height: 1.2;
+			margin-bottom: var(--space-6);
+			line-height: 1.1;
+			color: white;
+			text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+		}
+
+		.hero-subtitle {
+			font-size: var(--text-xl);
+			font-weight: 500;
+			margin-bottom: var(--space-2);
+			color: rgba(255,255,255,0.95);
+			font-family: var(--font-display);
 		}
 
 		.hero p {
-			font-size: 1.2rem;
-			margin-bottom: 2rem;
-			max-width: 600px;
+			font-size: var(--text-lg);
+			margin-bottom: var(--space-8);
+			max-width: 42rem;
 			margin-left: auto;
 			margin-right: auto;
-			opacity: 0.9;
+			color: rgba(255,255,255,0.9);
+			line-height: 1.6;
 		}
 
 		.cta-button {
-			display: inline-block;
+			display: inline-flex;
+			align-items: center;
+			gap: var(--space-2);
 			background: white;
-			color: #2563eb;
-			padding: 1rem 2rem;
-			border-radius: 8px;
+			color: var(--color-primary-700);
+			padding: var(--space-4) var(--space-8);
+			border-radius: var(--radius-lg);
 			text-decoration: none;
 			font-weight: 600;
-			font-size: 1.1rem;
-			transition: transform 0.2s, box-shadow 0.2s;
+			font-size: var(--text-lg);
+			transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+			box-shadow: var(--shadow-lg);
+			border: 2px solid transparent;
 		}
 
 		.cta-button:hover {
 			transform: translateY(-2px);
-			box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+			box-shadow: var(--shadow-xl);
+			background: var(--color-gray-50);
+			border-color: var(--color-primary-200);
 		}
+
+		.cta-button:active {
+			transform: translateY(0);
+		}
+
+		/* ==========================================================================
+		   FEATURES SECTION - ENHANCED STYLING
+		   ========================================================================== */
 
 		.features {
 			display: grid;
-			grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-			gap: 2rem;
-			margin-bottom: 4rem;
+			grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+			gap: var(--space-8);
+			margin-bottom: var(--space-20);
 		}
 
 		.feature {
-			background: white;
-			padding: 2rem;
-			border-radius: 12px;
+			background: var(--color-background);
+			padding: var(--space-8);
+			border-radius: var(--radius-2xl);
 			text-align: center;
-			box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+			box-shadow: var(--shadow-md);
+			border: 1px solid var(--color-border);
+			transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+			position: relative;
+			overflow: hidden;
+		}
+
+		.feature::before {
+			content: '';
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			height: 4px;
+			background: linear-gradient(90deg, 
+				var(--color-primary-500), 
+				var(--color-primary-600), 
+				var(--color-primary-700));
+		}
+
+		.feature:hover {
+			transform: translateY(-4px);
+			box-shadow: var(--shadow-xl);
+			border-color: var(--color-primary-200);
 		}
 
 		.feature-icon {
-			font-size: 3rem;
-			margin-bottom: 1rem;
+			font-size: var(--text-4xl);
+			margin-bottom: var(--space-6);
+			display: block;
+			line-height: 1;
 		}
 
 		.feature h3 {
-			font-size: 1.5rem;
-			margin-bottom: 1rem;
-			color: #1e293b;
+			font-size: var(--text-2xl);
+			margin-bottom: var(--space-4);
+			color: var(--color-text-primary);
+			font-weight: 600;
 		}
 
 		.feature p {
-			color: #64748b;
+			color: var(--color-text-secondary);
 			line-height: 1.6;
+			margin-bottom: 0;
 		}
 
+		/* ==========================================================================
+		   STATS SECTION - PREMIUM STYLING
+		   ========================================================================== */
+
 		.stats {
-			background: white;
-			padding: 3rem 2rem;
-			border-radius: 12px;
+			background: var(--color-background);
+			padding: var(--space-16) var(--space-8);
+			border-radius: var(--radius-2xl);
 			text-align: center;
-			margin-bottom: 4rem;
+			margin-bottom: var(--space-20);
+			box-shadow: var(--shadow-lg);
+			border: 1px solid var(--color-border);
 		}
 
 		.stats h2 {
-			font-size: 2rem;
-			margin-bottom: 2rem;
-			color: #1e293b;
+			font-size: var(--text-4xl);
+			margin-bottom: var(--space-12);
+			color: var(--color-text-primary);
+			font-weight: 600;
 		}
 
 		.stats-grid {
 			display: grid;
 			grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-			gap: 2rem;
+			gap: var(--space-8);
 		}
 
 		.stat-item {
-			padding: 1rem;
+			padding: var(--space-6);
+			border-radius: var(--radius-lg);
+			transition: all 0.3s ease;
+		}
+
+		.stat-item:hover {
+			background: var(--color-primary-50);
+			transform: translateY(-2px);
 		}
 
 		.stat-number {
-			font-size: 2.5rem;
-			font-weight: bold;
-			color: #2563eb;
+			font-size: var(--text-4xl);
+			font-weight: 700;
+			color: var(--color-primary-600);
 			display: block;
+			margin-bottom: var(--space-2);
+			font-family: var(--font-display);
 		}
 
 		.stat-label {
-			color: #64748b;
-			font-size: 0.9rem;
+			color: var(--color-text-secondary);
+			font-size: var(--text-sm);
 			text-transform: uppercase;
-			letter-spacing: 0.5px;
+			letter-spacing: 0.1em;
+			font-weight: 500;
 		}
+
+		/* ==========================================================================
+		   FOOTER - PROFESSIONAL STYLING
+		   ========================================================================== */
 
 		footer {
-			background: white;
-			border-top: 1px solid #e2e8f0;
-			padding: 2rem 0;
+			background: var(--color-background);
+			border-top: 1px solid var(--color-border);
+			padding: var(--space-8) 0;
 			text-align: center;
-			color: #64748b;
+			color: var(--color-text-muted);
 		}
 
+		/* ==========================================================================
+		   RESPONSIVE DESIGN
+		   ========================================================================== */
+
 		@media (max-width: 768px) {
-			.header-content {
-				flex-direction: column;
-				gap: 1rem;
-			}
-
-			nav a {
-				margin: 0 1rem;
-			}
-
-			.hero h1 {
-				font-size: 2rem;
-			}
-
-			.hero p {
-				font-size: 1rem;
+			.container {
+				padding-left: var(--space-4);
+				padding-right: var(--space-4);
 			}
 
 			.hero {
-				padding: 3rem 0;
+				padding: var(--space-16) 0;
+				margin-bottom: var(--space-12);
+			}
+
+			.features {
+				grid-template-columns: 1fr;
+				gap: var(--space-6);
+				margin-bottom: var(--space-12);
+			}
+
+			.feature {
+				padding: var(--space-6);
+			}
+
+			.stats {
+				padding: var(--space-12) var(--space-6);
+				margin-bottom: var(--space-12);
+			}
+
+			.stats-grid {
+				grid-template-columns: repeat(2, 1fr);
+				gap: var(--space-6);
+			}
+		}
+
+		@media (max-width: 480px) {
+			.stats-grid {
+				grid-template-columns: 1fr;
 			}
 		}
 	</style>
@@ -198,9 +509,17 @@ import Header from '../components/Header.astro';
 
 	<section class="hero">
 		<div class="container">
-			<h1>True Essentials</h1>
-			<p>Discover carefully curated products that enhance your daily life. Quality items, great deals, and trusted recommendations all in one place.</p>
-			<a href="/products" class="cta-button">Shop Now</a>
+			<div class="hero-content">
+				<h2 class="hero-subtitle">A Little Bit of Everything — Just a Click Away</h2>
+				<h1>True Essentials</h1>
+				<p>Your shortcut to smart and simple shopping. Discover carefully curated products that enhance your daily life with quality items, great deals, and trusted recommendations.</p>
+				<a href="/products" class="cta-button">
+					Shop Now
+					<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<path d="m9 18 6-6-6-6"/>
+					</svg>
+				</a>
+			</div>
 		</div>
 	</section>
 
