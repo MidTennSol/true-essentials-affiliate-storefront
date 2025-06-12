@@ -1,4 +1,5 @@
 import Airtable from 'airtable';
+import { categorizeProduct } from './categorize.js';
 
 // Types for our product data
 export interface AirtableProduct {
@@ -10,6 +11,7 @@ export interface AirtableProduct {
     'Affiliate URL': string;
     Slug: string;
     'Created At': string;
+    Category?: string;
   };
 }
 
@@ -18,6 +20,8 @@ export interface CreateProductData {
   description: string;
   imageUrl: string;
   affiliateUrl: string;
+  category?: string;
+  slug?: string;
 }
 
 // Initialize Airtable
@@ -26,6 +30,24 @@ const airtable = new Airtable({
 }).base(import.meta.env.AIRTABLE_BASE_ID);
 
 const table = airtable('Affiliate Products');
+
+/**
+ * Generate URL-friendly slug from title
+ */
+function generateSlugFromTitle(title: string): string {
+  return title
+    .toLowerCase()
+    .trim()
+    // Replace spaces and special characters with hyphens
+    .replace(/[^a-z0-9]+/g, '-')
+    // Remove leading/trailing hyphens
+    .replace(/^-+|-+$/g, '')
+    // Replace multiple consecutive hyphens with single hyphen
+    .replace(/-+/g, '-')
+    // Limit length to 50 characters
+    .substring(0, 50)
+    .replace(/-+$/, ''); // Remove trailing hyphen if created by substring
+}
 
 /**
  * Fetch all products from Airtable
@@ -71,16 +93,59 @@ export async function getProductBySlug(slug: string): Promise<AirtableProduct | 
 }
 
 /**
- * Create a new product in Airtable
+ * Create a new product in Airtable with auto-categorization
  */
 export async function createProduct(productData: CreateProductData): Promise<AirtableProduct> {
   try {
-    const record = await table.create({
+    // Validate required fields
+    if (!productData.title || !productData.description || !productData.imageUrl || !productData.affiliateUrl) {
+      throw new Error(`Missing required fields. Got: title=${!!productData.title}, description=${!!productData.description}, imageUrl=${!!productData.imageUrl}, affiliateUrl=${!!productData.affiliateUrl}`);
+    }
+
+    // Log the exact data being sent
+    console.log('🔍 Attempting to create product with data:', {
+      title: productData.title,
+      description: productData.description?.substring(0, 100) + '...',
+      affiliateUrl: productData.affiliateUrl,
+      imageUrl: productData.imageUrl,
+      category: productData.category
+    });
+
+    // Validate URL formats
+    try {
+      new URL(productData.imageUrl);
+      console.log('✅ Image URL format is valid');
+    } catch (urlError) {
+      console.error('❌ Invalid Image URL:', productData.imageUrl);
+      throw new Error(`Invalid Image URL format: "${productData.imageUrl}"`);
+    }
+
+    try {
+      new URL(productData.affiliateUrl);
+      console.log('✅ Affiliate URL format is valid');
+    } catch (urlError) {
+      console.error('❌ Invalid Affiliate URL:', productData.affiliateUrl);
+      throw new Error(`Invalid Affiliate URL format: "${productData.affiliateUrl}"`);
+    }
+
+    // Auto-categorize the product if no category is provided
+    const category = productData.category || categorizeProduct(productData.title, productData.description);
+    
+    // Prepare record data for Airtable (exclude Slug as it's computed by Airtable)
+    const recordData = {
       'Title': productData.title,
       'Description': productData.description,
       'Image URL': productData.imageUrl,
       'Affiliate URL': productData.affiliateUrl,
-    });
+      'Category': category,
+    };
+
+    console.log('📤 Final data being sent to Airtable:', recordData);
+    console.log('🔗 Image URL being sent:', JSON.stringify(productData.imageUrl));
+    console.log('🔗 Image URL length:', productData.imageUrl.length);
+    console.log('🔗 Image URL type:', typeof productData.imageUrl);
+
+    const record = await table.create(recordData);
 
     return {
       id: record.id,
@@ -88,7 +153,14 @@ export async function createProduct(productData: CreateProductData): Promise<Air
     };
   } catch (error) {
     console.error('Error creating product in Airtable:', error);
-    throw new Error('Failed to create product');
+    console.error('Product data that failed:', productData);
+    
+    // Preserve the original error message
+    if (error instanceof Error) {
+      throw new Error(`Failed to create product: ${error.message}`);
+    } else {
+      throw new Error(`Failed to create product: ${String(error)}`);
+    }
   }
 }
 
@@ -133,6 +205,7 @@ export async function updateProduct(id: string, updates: Partial<CreateProductDa
     if (updates.description) updateFields['Description'] = updates.description;
     if (updates.imageUrl) updateFields['Image URL'] = updates.imageUrl;
     if (updates.affiliateUrl) updateFields['Affiliate URL'] = updates.affiliateUrl;
+    if (updates.category) updateFields['Category'] = updates.category;
     
     const record = await table.update(id, updateFields);
     

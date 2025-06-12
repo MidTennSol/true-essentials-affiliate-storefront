@@ -1,0 +1,353 @@
+---
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+
+// Check authentication
+const isAuthenticated = Astro.cookies.get('admin_auth')?.value === 'authenticated';
+
+if (!isAuthenticated) {
+  return Astro.redirect('/admin');
+}
+
+let connectionTest = {
+  airtableApiKey: null as string | null,
+  airtableBaseId: null as string | null,
+  connectionStatus: 'Not tested',
+  errorMessage: null as string | null,
+  products: [] as any[],
+  createTestResult: null as any,
+  createTestError: null as string | null
+};
+
+try {
+  // Check environment variables
+  connectionTest.airtableApiKey = import.meta.env.AIRTABLE_API_KEY ? 'Set' : 'Missing';
+  connectionTest.airtableBaseId = import.meta.env.AIRTABLE_BASE_ID ? 'Set' : 'Missing';
+  
+  // Test connection
+  if (import.meta.env.AIRTABLE_API_KEY && import.meta.env.AIRTABLE_BASE_ID) {
+    const { getAllProducts, testConnection, createProduct } = await import('../../lib/airtable');
+    
+    const isConnected = await testConnection();
+    
+    if (isConnected) {
+      connectionTest.connectionStatus = 'Success';
+      // Get first few products to test
+      const products = await getAllProducts();
+      connectionTest.products = products.slice(0, 3);
+      
+      // Test product creation with a test product
+      try {
+        const testProduct = {
+          title: 'TEST PRODUCT - DELETE ME',
+          description: 'This is a test product created to verify Airtable write permissions. Safe to delete.',
+          imageUrl: 'https://via.placeholder.com/300x300?text=TEST',
+          affiliateUrl: 'https://amazon.com/test'
+        };
+        
+        const result = await createProduct(testProduct);
+        connectionTest.createTestResult = result;
+        
+        // Try to clean up the test product immediately
+        // Note: We'd need to implement deleteProduct function for full cleanup
+        
+      } catch (createError) {
+        connectionTest.createTestError = String(createError);
+      }
+    } else {
+      connectionTest.connectionStatus = 'Failed';
+      connectionTest.errorMessage = 'Connection test failed';
+    }
+  } else {
+    connectionTest.connectionStatus = 'Missing Config';
+    connectionTest.errorMessage = 'AIRTABLE_API_KEY or AIRTABLE_BASE_ID is missing';
+  }
+} catch (error) {
+  connectionTest.connectionStatus = 'Error';
+  connectionTest.errorMessage = String(error);
+}
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Airtable Connection - True Essentials Admin</title>
+  <style>
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      margin: 0;
+      background: #f8fafc;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 0 1rem;
+    }
+
+    main {
+      flex: 1;
+      padding: 2rem 0;
+    }
+
+    .admin-header {
+      background: white;
+      padding: 2rem 0;
+      border-bottom: 1px solid #e2e8f0;
+      margin-bottom: 2rem;
+    }
+
+    .admin-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 0;
+    }
+
+    .admin-subtitle {
+      color: #64748b;
+      font-size: 1.125rem;
+      margin: 0.5rem 0 0 0;
+    }
+
+    .test-section {
+      background: white;
+      border-radius: 1rem;
+      padding: 2rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      margin-bottom: 2rem;
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #1e293b;
+      margin: 0 0 1rem 0;
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .status-item {
+      background: #f8fafc;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      border: 1px solid #e2e8f0;
+    }
+
+    .status-label {
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 0.5rem;
+    }
+
+    .status-value {
+      font-family: monospace;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      font-size: 0.875rem;
+    }
+
+    .status-success {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .status-error {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .status-warning {
+      background: #fef3c7;
+      color: #d97706;
+    }
+
+    .error-message {
+      background: #fee2e2;
+      color: #dc2626;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      border: 1px solid #fecaca;
+      margin-top: 1rem;
+    }
+
+    .products-sample {
+      margin-top: 2rem;
+    }
+
+    .product-item {
+      background: #f8fafc;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      margin-bottom: 0.5rem;
+      border: 1px solid #e2e8f0;
+    }
+
+    .product-title {
+      font-weight: 600;
+      color: #1e293b;
+    }
+
+    .product-meta {
+      font-size: 0.875rem;
+      color: #64748b;
+      margin-top: 0.25rem;
+    }
+
+    .back-button {
+      background: #6b7280;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 0.5rem;
+      text-decoration: none;
+      display: inline-block;
+      margin-bottom: 1rem;
+    }
+
+    .back-button:hover {
+      background: #4b5563;
+    }
+  </style>
+</head>
+
+<body>
+  <Header />
+  
+  <main>
+    <div class="admin-header">
+      <div class="container">
+        <h1 class="admin-title">Airtable Connection Test</h1>
+        <p class="admin-subtitle">Diagnose Airtable API configuration issues</p>
+      </div>
+    </div>
+
+    <div class="container">
+      <a href="/admin" class="back-button">← Back to Admin Dashboard</a>
+      
+      <div class="test-section">
+        <h2 class="section-title">Connection Status</h2>
+        
+        <div class="status-grid">
+          <div class="status-item">
+            <div class="status-label">API Key</div>
+            <div class={`status-value ${connectionTest.airtableApiKey === 'Set' ? 'status-success' : 'status-error'}`}>
+              {connectionTest.airtableApiKey}
+            </div>
+          </div>
+          
+          <div class="status-item">
+            <div class="status-label">Base ID</div>
+            <div class={`status-value ${connectionTest.airtableBaseId === 'Set' ? 'status-success' : 'status-error'}`}>
+              {connectionTest.airtableBaseId}
+            </div>
+          </div>
+          
+          <div class="status-item">
+            <div class="status-label">Connection Test</div>
+            <div class={`status-value ${connectionTest.connectionStatus === 'Success' ? 'status-success' : 'status-error'}`}>
+              {connectionTest.connectionStatus}
+            </div>
+          </div>
+          
+          <div class="status-item">
+            <div class="status-label">Products Found</div>
+            <div class={`status-value ${connectionTest.products.length > 0 ? 'status-success' : 'status-warning'}`}>
+              {connectionTest.products.length}
+            </div>
+          </div>
+          
+          <div class="status-item">
+            <div class="status-label">Create Test</div>
+            <div class={`status-value ${connectionTest.createTestResult ? 'status-success' : connectionTest.createTestError ? 'status-error' : 'status-warning'}`}>
+              {connectionTest.createTestResult ? 'Success' : connectionTest.createTestError ? 'Failed' : 'Not tested'}
+            </div>
+          </div>
+        </div>
+
+        {connectionTest.errorMessage && (
+          <div class="error-message">
+            <strong>Error:</strong> {connectionTest.errorMessage}
+          </div>
+        )}
+
+        {connectionTest.createTestError && (
+          <div class="error-message">
+            <strong>Create Test Error:</strong> {connectionTest.createTestError}
+          </div>
+        )}
+
+        {connectionTest.createTestResult && (
+          <div style="background: #dcfce7; color: #166534; padding: 1rem; border-radius: 0.5rem; border: 1px solid #bbf7d0; margin-top: 1rem;">
+            <strong>✅ Create Test Success:</strong> Successfully created test product with ID: {connectionTest.createTestResult.id}
+            <br><small>Note: This test product was created in your Airtable. You can safely delete it.</small>
+          </div>
+        )}
+
+        {connectionTest.products.length > 0 && (
+          <div class="products-sample">
+            <h3 class="section-title">Sample Products</h3>
+            {connectionTest.products.map(product => (
+              <div class="product-item">
+                <div class="product-title">{product.fields.Title}</div>
+                <div class="product-meta">
+                  ID: {product.id} | Category: {product.fields.Category || 'None'}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div class="test-section">
+        <h2 class="section-title">Troubleshooting Guide</h2>
+        
+        {connectionTest.airtableApiKey === 'Missing' && (
+          <div class="error-message">
+            <strong>Missing API Key:</strong> Add AIRTABLE_API_KEY to your .env file. Get it from 
+            <a href="https://airtable.com/developers/web/api/introduction" target="_blank">Airtable Developer Hub</a>.
+          </div>
+        )}
+        
+        {connectionTest.airtableBaseId === 'Missing' && (
+          <div class="error-message">
+            <strong>Missing Base ID:</strong> Add AIRTABLE_BASE_ID to your .env file. Find it in your Airtable base URL.
+          </div>
+        )}
+        
+        {connectionTest.connectionStatus === 'Failed' && (
+          <div class="error-message">
+            <strong>Connection Failed:</strong> Check that your API key has access to the specified base and that the table name "Affiliate Products" exists.
+          </div>
+        )}
+        
+        {connectionTest.createTestError && (
+          <div class="error-message">
+            <strong>Write Permission Issue:</strong> Your API key can read data but cannot create new records. 
+            This usually means:
+            <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+              <li>The API key doesn't have write permissions to this base</li>
+              <li>Required fields are missing in the table structure</li>
+              <li>Field names don't match exactly (case-sensitive)</li>
+            </ul>
+            <strong>Recommended fix:</strong> Check your Airtable base permissions and ensure the table has these exact fields:
+            <code style="background: #f3f4f6; padding: 0.25rem; border-radius: 0.25rem;">Title, Description, Image URL, Affiliate URL, Category, Slug, Created At</code>
+          </div>
+        )}
+      </div>
+    </div>
+  </main>
+
+  <Footer />
+</body>
+</html> 

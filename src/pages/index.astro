@@ -1,6 +1,7 @@
 ---
 // Home page - simple landing page for the affiliate storefront
 import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
 ---
 
 <!DOCTYPE html>
@@ -382,12 +383,117 @@ import Header from '../components/Header.astro';
 			animation: fadeInUp 0.8s ease-out 0.8s both;
 		}
 
+		/* Hero Search Section */
+		.hero-search-section {
+			margin-bottom: var(--space-8);
+			animation: fadeInUp 0.8s ease-out 0.9s both;
+		}
+
+		.hero-search-wrapper {
+			max-width: 600px;
+			margin: 0 auto;
+		}
+
+		.hero-search-form {
+			margin-bottom: var(--space-4);
+		}
+
+		.search-input-wrapper {
+			position: relative;
+			display: flex;
+			align-items: center;
+			background: rgba(255, 255, 255, 0.95);
+			backdrop-filter: blur(10px);
+			border-radius: 50px;
+			padding: var(--space-2);
+			box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+			border: 2px solid rgba(255, 255, 255, 0.2);
+			transition: all 0.3s ease;
+		}
+
+		.search-input-wrapper:focus-within {
+			box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+			border-color: rgba(255, 255, 255, 0.4);
+			transform: translateY(-2px);
+		}
+
+		.search-icon {
+			margin-left: var(--space-4);
+			margin-right: var(--space-3);
+			color: var(--color-gray-500);
+			flex-shrink: 0;
+		}
+
+		.hero-search-input {
+			flex: 1;
+			border: none;
+			background: transparent;
+			padding: var(--space-4) var(--space-2);
+			font-size: var(--text-lg);
+			color: var(--color-gray-800);
+			outline: none;
+			font-family: inherit;
+		}
+
+		.hero-search-input::placeholder {
+			color: var(--color-gray-500);
+		}
+
+		.hero-search-btn {
+			background: var(--color-primary-600);
+			color: white;
+			border: none;
+			padding: var(--space-3) var(--space-6);
+			border-radius: 40px;
+			font-size: var(--text-base);
+			font-weight: 600;
+			cursor: pointer;
+			transition: all 0.2s ease;
+			margin-right: var(--space-1);
+		}
+
+		.hero-search-btn:hover {
+			background: var(--color-primary-700);
+			transform: translateY(-1px);
+		}
+
+		.search-suggestions {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			gap: var(--space-3);
+			justify-content: center;
+		}
+
+		.search-suggestion-label {
+			color: rgba(255, 255, 255, 0.8);
+			font-size: var(--text-sm);
+			font-weight: 500;
+		}
+
+		.search-suggestion {
+			color: rgba(255, 255, 255, 0.9);
+			text-decoration: none;
+			padding: var(--space-1) var(--space-3);
+			background: rgba(255, 255, 255, 0.1);
+			border-radius: 20px;
+			font-size: var(--text-sm);
+			transition: all 0.2s ease;
+			border: 1px solid rgba(255, 255, 255, 0.2);
+		}
+
+		.search-suggestion:hover {
+			background: rgba(255, 255, 255, 0.2);
+			color: white;
+			transform: translateY(-1px);
+		}
+
 		.hero-cta-group {
 			display: flex;
 			flex-direction: column;
 			align-items: center;
 			gap: var(--space-4);
-			animation: fadeInUp 0.8s ease-out 1s both;
+			animation: fadeInUp 0.8s ease-out 1.1s both;
 		}
 
 		.hero-cta-primary {
@@ -844,6 +950,39 @@ import Header from '../components/Header.astro';
 
 			.hero-content {
 				padding: 0 var(--space-4);
+			}
+
+			.hero-search-wrapper {
+				padding: 0 var(--space-2);
+			}
+
+			.search-input-wrapper {
+				flex-direction: column;
+				gap: var(--space-2);
+				padding: var(--space-3);
+				border-radius: 20px;
+			}
+
+			.hero-search-input {
+				text-align: center;
+				padding: var(--space-3);
+				font-size: var(--text-base);
+			}
+
+			.hero-search-btn {
+				width: 100%;
+				border-radius: 15px;
+				margin: 0;
+				padding: var(--space-3);
+			}
+
+			.search-suggestions {
+				flex-direction: column;
+				gap: var(--space-2);
+			}
+
+			.search-suggestion {
+				padding: var(--space-2) var(--space-4);
 			}
 
 			.hero-cta-group {
@@ -1393,9 +1532,39 @@ import Header from '../components/Header.astro';
 					Your shortcut to smart and simple shopping. Discover carefully curated products that enhance your daily life with quality items, great deals, and trusted recommendations.
 				</p>
 				
+				<div class="hero-search-section">
+					<div class="hero-search-wrapper">
+						<form class="hero-search-form" action="/products" method="GET">
+							<div class="search-input-wrapper">
+								<svg class="search-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+									<circle cx="11" cy="11" r="8"/>
+									<path d="m21 21-4.35-4.35"/>
+								</svg>
+								<input 
+									type="text" 
+									name="search" 
+									placeholder="Search products, brands, or ASIN..." 
+									class="hero-search-input"
+									autocomplete="off"
+								/>
+								<button type="submit" class="hero-search-btn">
+									Search
+								</button>
+							</div>
+						</form>
+						<div class="search-suggestions">
+							<span class="search-suggestion-label">Popular searches:</span>
+							<a href="/products?search=kitchen" class="search-suggestion">Kitchen</a>
+							<a href="/products?search=tools" class="search-suggestion">Tools</a>
+							<a href="/products?search=home" class="search-suggestion">Home</a>
+							<a href="/products?search=electronics" class="search-suggestion">Electronics</a>
+						</div>
+					</div>
+				</div>
+
 				<div class="hero-cta-group">
 					<a href="/products" class="hero-cta-primary">
-						Shop Now
+						Browse All Products
 						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 							<path d="m9 18 6-6-6-6"/>
 						</svg>
@@ -1678,11 +1847,7 @@ import Header from '../components/Header.astro';
 		</svg>
 	</a>
 
-	<footer>
-		<div class="container">
-			<p>&copy; 2024 True Essentials. All rights reserved.</p>
-		</div>
-	</footer>
+	<Footer />
 
 	<!-- Floating CTA JavaScript -->
 	<script>

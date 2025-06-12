@@ -1,0 +1,402 @@
+---
+import { getAllProducts } from '../lib/airtable.ts';
+import type { AirtableProduct } from '../lib/airtable.ts';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+// Fetch all products and group them by category
+let productsByCategory: Record<string, AirtableProduct[]> = {};
+let errorMessage = '';
+
+try {
+  const allProducts = await getAllProducts();
+  
+  // Group products by category
+  allProducts.forEach(product => {
+    const category = product.fields.Category || 'Miscellaneous';
+    if (!productsByCategory[category]) {
+      productsByCategory[category] = [];
+    }
+    productsByCategory[category].push(product);
+  });
+} catch (error) {
+  console.error('Error fetching products:', error);
+  errorMessage = 'Failed to load categories. Please try again later.';
+}
+
+// Sort categories alphabetically
+const sortedCategories = Object.keys(productsByCategory).sort();
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Categories - True Essentials</title>
+  <meta name="description" content="Browse our curated products organized by category. Find exactly what you're looking for in our well-organized collection.">
+  
+  <style>
+    /* ==========================================================================
+       DESIGN SYSTEM VARIABLES
+       ========================================================================== */
+    
+    :root {
+      --font-body: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-display: 'Playfair Display', Georgia, serif;
+      
+      --text-sm: clamp(0.875rem, 0.84rem + 0.18vw, 0.95rem);
+      --text-base: clamp(1rem, 0.95rem + 0.24vw, 1.125rem);
+      --text-lg: clamp(1.125rem, 1.05rem + 0.37vw, 1.35rem);
+      --text-xl: clamp(1.25rem, 1.15rem + 0.5vw, 1.6rem);
+      --text-2xl: clamp(1.5rem, 1.35rem + 0.75vw, 2rem);
+      --text-3xl: clamp(1.875rem, 1.65rem + 1.125vw, 2.5rem);
+      
+      --color-primary-500: #4287a8;
+      --color-primary-600: #396f8d;
+      --color-primary-700: #335c74;
+      
+      --color-gray-50: #fafafa;
+      --color-gray-100: #f4f4f5;
+      --color-gray-200: #e4e4e7;
+      --color-gray-400: #a1a1aa;
+      --color-gray-500: #71717a;
+      --color-gray-600: #52525b;
+      --color-gray-700: #3f3f46;
+      --color-gray-900: #18181b;
+      
+      --space-4: 1rem;
+      --space-6: 1.5rem;
+      --space-8: 2rem;
+      --space-12: 3rem;
+      --space-16: 4rem;
+      --space-20: 5rem;
+      
+      --radius-lg: 0.75rem;
+      --radius-xl: 1rem;
+    }
+
+    body {
+      font-family: var(--font-body);
+      line-height: 1.6;
+      color: var(--color-gray-900);
+      background: var(--color-gray-50);
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 var(--space-4);
+    }
+
+    main {
+      flex: 1;
+      padding: var(--space-8) 0;
+    }
+
+    .page-header {
+      text-align: center;
+      margin-bottom: var(--space-16);
+    }
+
+    .page-title {
+      font-family: var(--font-display);
+      font-size: var(--text-3xl);
+      font-weight: 700;
+      color: var(--color-gray-900);
+      margin: 0 0 var(--space-4) 0;
+    }
+
+    .page-description {
+      font-size: var(--text-lg);
+      color: var(--color-gray-600);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .categories-grid {
+      display: grid;
+      gap: var(--space-12);
+    }
+
+    .category-section {
+      background: white;
+      border-radius: var(--radius-xl);
+      padding: var(--space-8);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      border: 1px solid var(--color-gray-200);
+    }
+
+    .category-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-6);
+      padding-bottom: var(--space-4);
+      border-bottom: 2px solid var(--color-gray-100);
+    }
+
+    .category-title {
+      font-family: var(--font-display);
+      font-size: var(--text-2xl);
+      font-weight: 600;
+      color: var(--color-gray-900);
+      margin: 0;
+    }
+
+    .category-count {
+      background: var(--color-primary-500);
+      color: white;
+      padding: var(--space-1) var(--space-3);
+      border-radius: 50px;
+      font-size: var(--text-sm);
+      font-weight: 600;
+    }
+
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: var(--space-6);
+    }
+
+    .product-card {
+      background: var(--color-gray-50);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      transition: all 0.3s ease;
+      border: 1px solid var(--color-gray-200);
+    }
+
+    .product-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .product-image-wrapper-link {
+      display: block;
+      text-decoration: none;
+      position: relative;
+      z-index: 1;
+    }
+
+    .product-image-wrapper {
+      position: relative;
+      overflow: hidden;
+      background: var(--color-gray-100);
+    }
+
+    .product-image {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+
+    .product-image:hover {
+      transform: scale(1.05);
+    }
+
+    .product-content {
+      padding: var(--space-4);
+    }
+
+    .product-title {
+      font-size: var(--text-base);
+      font-weight: 600;
+      color: var(--color-gray-900);
+      margin: 0 0 var(--space-2) 0;
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .product-description {
+      font-size: var(--text-sm);
+      color: var(--color-gray-600);
+      margin: 0 0 var(--space-4) 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .product-actions {
+      display: flex;
+      gap: var(--space-2);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-2) var(--space-4);
+      border: none;
+      border-radius: var(--radius-lg);
+      font-weight: 600;
+      font-size: var(--text-sm);
+      text-decoration: none;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      flex: 1;
+      text-align: center;
+    }
+
+    .btn-primary {
+      background: var(--color-primary-500);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--color-primary-600);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: white;
+      color: var(--color-primary-500);
+      border: 1px solid var(--color-primary-500);
+    }
+
+    .btn-secondary:hover {
+      background: var(--color-primary-50);
+      transform: translateY(-1px);
+    }
+
+    .error-message {
+      background: #fee2e2;
+      color: #dc2626;
+      padding: var(--space-4);
+      border-radius: var(--radius-lg);
+      margin: var(--space-8) 0;
+      text-align: center;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: var(--space-20) var(--space-4);
+      color: var(--color-gray-600);
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .category-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-2);
+      }
+
+      .products-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .category-section {
+        padding: var(--space-6);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <Header />
+  
+  <main>
+    <div class="container">
+      <div class="page-header">
+        <h1 class="page-title">Product Categories</h1>
+        <p class="page-description">
+          Browse our curated collection organized by category. Find exactly what you're looking for in our well-organized product selection.
+        </p>
+      </div>
+
+      {errorMessage && (
+        <div class="error-message">
+          <strong>Error:</strong> {errorMessage}
+        </div>
+      )}
+
+      {!errorMessage && sortedCategories.length > 0 && (
+        <div class="categories-grid">
+          {sortedCategories.map(category => (
+            <div class="category-section">
+              <div class="category-header">
+                <h2 class="category-title">{category}</h2>
+                <span class="category-count">{productsByCategory[category].length} product{productsByCategory[category].length !== 1 ? 's' : ''}</span>
+              </div>
+              
+              <div class="products-grid">
+                {productsByCategory[category].map(product => (
+                  <div class="product-card">
+                    <a 
+                      href={product.fields['Affiliate URL']}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="product-image-wrapper-link"
+                    >
+                      <div class="product-image-wrapper">
+                        <img 
+                          src={product.fields['Image URL'] || 'https://via.placeholder.com/280x200/e2e8f0/64748b?text=📦+Product'}
+                          alt={product.fields.Title}
+                          class="product-image"
+                          loading="lazy"
+                          onerror="this.onerror=null; this.src='https://via.placeholder.com/280x200/e2e8f0/64748b?text=📦+Product';"
+                        />
+                      </div>
+                    </a>
+                    
+                    <div class="product-content">
+                      <a 
+                        href={product.fields['Affiliate URL']}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style="text-decoration: none; color: inherit;"
+                      >
+                        <h3 class="product-title">{product.fields.Title}</h3>
+                      </a>
+                      <p class="product-description">{product.fields.Description}</p>
+                      
+                      <div class="product-actions">
+                        <a 
+                          href={product.fields['Affiliate URL']}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="btn btn-primary"
+                        >
+                          🛒 Buy on Amazon
+                        </a>
+                        <a 
+                          href={`/products/${product.fields.Slug}`}
+                          class="btn btn-secondary"
+                        >
+                          Details
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!errorMessage && sortedCategories.length === 0 && (
+        <div class="empty-state">
+          <h2>No Categories Yet</h2>
+          <p>Categories will appear here once products are added with category information.</p>
+          <p style="margin-top: 1rem;">
+            <a href="/products" class="btn btn-primary">View All Products</a>
+          </p>
+        </div>
+      )}
+    </div>
+  </main>
+
+  <Footer />
+</body>
+</html> 

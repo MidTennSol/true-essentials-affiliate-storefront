@@ -323,22 +323,22 @@ function getCategoryFromTitle(title: string): string {
   const titleLower = title.toLowerCase();
   
   if (titleLower.includes('electronic') || titleLower.includes('resistor') || titleLower.includes('transistor')) {
-    return '🔌 Electronics';
+    return 'Electronics';
   }
   if (titleLower.includes('kitchen') || titleLower.includes('gadget') || titleLower.includes('tool') || titleLower.includes('bundt') || titleLower.includes('nordic')) {
-    return '🍳 Kitchen & Tools';
+    return 'Kitchen+Tools';
   }
   if (titleLower.includes('climbing') || titleLower.includes('outdoor') || titleLower.includes('sport')) {
-    return '🏃 Sports & Outdoors';
+    return 'Sports+Outdoors';
   }
   if (titleLower.includes('security') || titleLower.includes('alarm') || titleLower.includes('sensor')) {
-    return '🛡️ Security';
+    return 'Security';
   }
   if (titleLower.includes('automotive') || titleLower.includes('car') || titleLower.includes('switch')) {
-    return '🚗 Automotive';
+    return 'Automotive';
   }
   
-  return '📦 Amazon Product';
+  return 'Amazon+Product';
 }
 
 /**

@@ -24,6 +24,9 @@ const currentPath = Astro.url.pathname;
         <a href="/products" class={currentPath.startsWith('/products') ? 'nav-link active' : 'nav-link'}>
           Products
         </a>
+        <a href="/categories" class={currentPath.startsWith('/categories') ? 'nav-link active' : 'nav-link'}>
+          Categories
+        </a>
         <a href="/affiliate-disclosure" class={currentPath === '/affiliate-disclosure' ? 'nav-link active' : 'nav-link'}>
           Disclosure
         </a>
@@ -47,6 +50,9 @@ const currentPath = Astro.url.pathname;
       </a>
       <a href="/products" class={currentPath.startsWith('/products') ? 'mobile-nav-link active' : 'mobile-nav-link'}>
         Products
+      </a>
+      <a href="/categories" class={currentPath.startsWith('/categories') ? 'mobile-nav-link active' : 'mobile-nav-link'}>
+        Categories
       </a>
       <a href="/affiliate-disclosure" class={currentPath === '/affiliate-disclosure' ? 'mobile-nav-link active' : 'mobile-nav-link'}>
         Affiliate Disclosure

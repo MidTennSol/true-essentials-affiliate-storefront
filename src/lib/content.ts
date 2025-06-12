@@ -19,11 +19,25 @@ export function generateSlug(text: string): string {
 }
 
 /**
- * Extract product title from Amazon page (simplified approach)
- * This would ideally scrape the actual title, but for now we'll use fallbacks
+ * Extract product title from Amazon page using real scraping
  */
 export async function extractAmazonTitle(amazonUrl: string, asin: string): Promise<string> {
-  // Try to get title from URL structure first
+  try {
+    // Try to get real Amazon title first
+    const { scrapeAmazonProductInfo } = await import('./amazon-scraper-fetch');
+    const productInfo = await scrapeAmazonProductInfo(amazonUrl);
+    
+    if (productInfo?.title) {
+      // Clean and format the real title
+      const cleanedTitle = createCleanTitle(productInfo.title, 60);
+      console.log('✅ Using real Amazon title:', cleanedTitle);
+      return cleanedTitle;
+    }
+  } catch (error) {
+    console.warn('Failed to scrape real Amazon title:', error);
+  }
+  
+  // Fallback to smart title generation
   const { createSmartTitle } = await import('./title-extractor');
   return createSmartTitle(asin, amazonUrl);
 }
@@ -67,21 +81,87 @@ export function createCleanTitle(rawTitle: string, maxLength: number = 50): stri
 }
 
 /**
- * Generate simple, relevant product description
+ * Generate intelligent, category-specific product description
  */
 export function generateSimpleDescription(title: string, asin: string): string {
   const cleanTitle = title.replace(/\.\.\.$/, '').trim();
+  const titleLower = cleanTitle.toLowerCase();
   
-  // Create more engaging simple descriptions
-  const templates = [
-    `Discover this ${cleanTitle.toLowerCase()} that customers are loving on Amazon. With great reviews and competitive pricing, it's become a popular choice for those seeking quality and value. See why it's trending and check current deals on Amazon!`,
-    `Looking for a reliable ${cleanTitle.toLowerCase()}? This Amazon bestseller delivers on both quality and value. Join thousands of satisfied customers who've made this their go-to choice. View details and current pricing on Amazon now!`,
-    `This ${cleanTitle.toLowerCase()} is getting attention on Amazon for all the right reasons. Customers love its quality, value, and performance. Don't miss out on what could be your next favorite purchase. Check it out on Amazon today!`
+  // Detect product category and create specific descriptions
+  if (titleLower.includes('bug zapper') || titleLower.includes('fly zapper') || titleLower.includes('insect killer')) {
+    return `Keep your space pest-free with this effective bug zapper. Features powerful UV light attraction and electric grid to eliminate flies, mosquitoes, and other flying insects. Perfect for both indoor and outdoor use, providing chemical-free pest control for your home, patio, or garden. Easy to clean and maintain. Say goodbye to annoying bugs and enjoy a more comfortable environment!`;
+  }
+  
+  if (titleLower.includes('drill') || titleLower.includes('dewalt') || titleLower.includes('cordless')) {
+    return `This professional-grade cordless drill delivers the power and precision you need for any project. Features a high-performance motor, long-lasting battery, and ergonomic design for comfortable extended use. Perfect for drilling, driving screws, and tackle both light household tasks and demanding professional jobs. Trusted by contractors and DIY enthusiasts alike.`;
+  }
+  
+  if (titleLower.includes('kitchen') || titleLower.includes('cooking') || titleLower.includes('chef') || titleLower.includes('cookware')) {
+    return `Elevate your cooking experience with this premium kitchen essential. Designed for both amateur cooks and professional chefs, it combines functionality with durability. Features quality materials and thoughtful design elements that make meal preparation easier and more enjoyable. A must-have addition to any well-equipped kitchen.`;
+  }
+  
+  if (titleLower.includes('led') || titleLower.includes('light') || titleLower.includes('lamp') || titleLower.includes('bulb')) {
+    return `Upgrade your lighting with this energy-efficient LED solution. Provides bright, consistent illumination while reducing energy costs. Easy to install and built to last, offering reliable performance for years. Perfect for enhancing ambiance, improving visibility, or replacing outdated lighting fixtures.`;
+  }
+  
+  if (titleLower.includes('security') || titleLower.includes('camera') || titleLower.includes('alarm') || titleLower.includes('sensor')) {
+    return `Protect what matters most with this advanced security solution. Features cutting-edge technology for reliable monitoring and peace of mind. Easy to set up and integrate with existing systems. Whether for home or business use, this device provides the security features you need to stay protected.`;
+  }
+  
+  if (titleLower.includes('outdoor') || titleLower.includes('camping') || titleLower.includes('hiking') || titleLower.includes('tactical')) {
+    return `Built for adventure and designed to perform in challenging conditions. This rugged outdoor gear combines durability with functionality, making it perfect for camping, hiking, tactical applications, or everyday carry. Weather-resistant construction ensures reliable performance when you need it most.`;
+  }
+  
+  if (titleLower.includes('electronic') || titleLower.includes('gadget') || titleLower.includes('device') || titleLower.includes('tech')) {
+    return `Stay ahead with this innovative electronic device that combines cutting-edge technology with user-friendly design. Perfect for tech enthusiasts and everyday users alike, it delivers reliable performance and modern features. Enhance your digital lifestyle with this versatile and practical solution.`;
+  }
+  
+  // Generic but more specific fallback
+  const productType = extractProductType(cleanTitle);
+  return `Experience the quality and reliability of this premium ${productType}. Carefully designed with attention to detail and built to meet high standards. Popular among customers for its excellent value and dependable performance. Perfect for those seeking a trustworthy solution that delivers on its promises. See why customers recommend this choice!`;
+}
+
+/**
+ * Extract product type from title for better descriptions
+ */
+function extractProductType(title: string): string {
+  const titleLower = title.toLowerCase();
+  
+  // Try to find the main product noun
+  const productWords = [
+    'zapper', 'drill', 'light', 'lamp', 'camera', 'sensor', 'tool', 'device', 
+    'gadget', 'kit', 'set', 'system', 'equipment', 'machine', 'appliance',
+    'charger', 'cable', 'adapter', 'holder', 'stand', 'mount', 'case', 'cover'
   ];
   
-  // Use ASIN to consistently pick the same template for each product
-  const templateIndex = asin ? parseInt(asin.slice(-1), 36) % templates.length : 0;
-  return templates[templateIndex] || templates[0];
+  for (const word of productWords) {
+    if (titleLower.includes(word)) {
+      return word;
+    }
+  }
+  
+  // Extract last meaningful word as product type
+  const words = title.split(' ').filter(word => word.length > 2);
+  return words.length > 0 ? words[words.length - 1].toLowerCase() : 'product';
+}
+
+/**
+ * Detect product category for better AI context
+ */
+function detectProductCategory(title: string): string | null {
+  const titleLower = title.toLowerCase();
+  
+  if (titleLower.includes('bug zapper') || titleLower.includes('insect killer')) return 'Pest Control Device';
+  if (titleLower.includes('drill') || titleLower.includes('tool')) return 'Power Tool';
+  if (titleLower.includes('kitchen') || titleLower.includes('cooking')) return 'Kitchen Appliance';
+  if (titleLower.includes('led') || titleLower.includes('light')) return 'Lighting Solution';
+  if (titleLower.includes('security') || titleLower.includes('camera')) return 'Security Equipment';
+  if (titleLower.includes('outdoor') || titleLower.includes('camping')) return 'Outdoor Gear';
+  if (titleLower.includes('electronic') || titleLower.includes('gadget')) return 'Electronic Device';
+  if (titleLower.includes('automotive') || titleLower.includes('car')) return 'Automotive Accessory';
+  if (titleLower.includes('home') || titleLower.includes('household')) return 'Home & Garden';
+  
+  return null;
 }
 
 /**
@@ -99,18 +179,45 @@ function getOpenAIClient(): OpenAI | null {
 }
 
 /**
- * Generate enhanced description using AI (optional enhancement)
+ * Generate enhanced description using AI with real Amazon data
  */
-export async function generateEnhancedDescription(title: string, asin?: string): Promise<string> {
+export async function generateEnhancedDescription(title: string, amazonUrl?: string, asin?: string): Promise<string> {
   const openai = getOpenAIClient();
   
   if (!openai) {
-    console.log('OpenAI API key not found, using simple description');
+    console.log('OpenAI API key not found, using intelligent simple description');
     return generateSimpleDescription(title, asin || '');
   }
 
   try {
     console.log(`Generating AI description for: ${title}`);
+    
+    // Try to get real Amazon product features for better context
+    let productContext = `Product title: ${title}`;
+    let hasFeatures = false;
+    
+    if (amazonUrl) {
+      try {
+        const { scrapeAmazonProductInfo } = await import('./amazon-scraper-fetch');
+        const productInfo = await scrapeAmazonProductInfo(amazonUrl);
+        
+        if (productInfo?.features && productInfo.features.length > 0) {
+          productContext += `\n\nKey features from Amazon:\n${productInfo.features.map(f => `• ${f}`).join('\n')}`;
+          hasFeatures = true;
+          console.log('✅ Using real Amazon features for AI description');
+        } else {
+          console.log('⚠️ No Amazon features found, using title-based generation');
+        }
+      } catch (error) {
+        console.warn('Could not fetch Amazon features for AI description:', error);
+      }
+    }
+    
+    // Add additional context based on product type detection
+    const categoryContext = detectProductCategory(title);
+    if (categoryContext) {
+      productContext += `\n\nProduct category: ${categoryContext}`;
+    }
     
     const response = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
@@ -125,29 +232,37 @@ export async function generateEnhancedDescription(title: string, asin?: string):
           - Use emotional triggers and urgency
           - Include social proof elements
           - End with a clear call-to-action
-          - Keep under 120 words for optimal readability
+          - Keep under 150 words for optimal readability
 
           AVOID:
           - Technical jargon
           - Generic phrases like "high quality" 
           - Overly salesy language
-          - Excessive punctuation or ALL CAPS`
+          - Excessive punctuation or ALL CAPS
+          - Simply listing features without explaining benefits`
         },
         {
           role: 'user',
-          content: `Write a compelling product description for: "${title}"
+          content: `Write a compelling product description based on this Amazon product information:
+
+          ${productContext}
+
+          ${hasFeatures ? 
+            'Use the features provided to explain customer benefits and real-world applications.' : 
+            'Since no specific features are available, use your knowledge of this product type to create an informative and engaging description that explains typical benefits, uses, and why customers would want this product.'
+          }
 
           Focus on:
-          - Why customers NEED this product
-          - What problems it solves
-          - The experience they'll have using it
-          - Create urgency without being pushy
-          - End with "Check it out on Amazon!" or similar natural CTA
+          - What problems this product solves in everyday life
+          - The experience and benefits customers will have
+          - Why someone would choose this over alternatives
+          - Make it feel authentic and helpful, not just marketing fluff
+          - End with a natural call-to-action
           
-          Keep it under 120 words and make every word count.`
+          Keep it under 150 words and make every word count. Write in a natural, conversational tone that educates and persuades.`
         }
       ],
-      max_tokens: 180,
+      max_tokens: 200,
       temperature: 0.75,
     });
 
@@ -184,7 +299,7 @@ export async function generateProductContent(asin: string, amazonUrl?: string): 
     console.log(`Generated title: ${title}`);
     
     // Generate enhanced AI description (with fallback to simple)
-    const description = await generateEnhancedDescription(title, asin);
+    const description = await generateEnhancedDescription(title, amazonUrl, asin);
     console.log(`Generated enhanced description length: ${description.length} characters`);
     
     // Generate slug from title
