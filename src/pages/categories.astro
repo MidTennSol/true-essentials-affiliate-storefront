@@ -29,6 +29,11 @@ const sortedCategories = Object.keys(productsByCategory).sort();
 
 // Limit products per category for preview (show only 3)
 const PRODUCTS_PER_CATEGORY = 3;
+
+// Slugify function for category anchors/IDs
+function slugifyCategory(category: string): string {
+  return category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+}
 ---
 
 <!DOCTYPE html>
@@ -380,6 +385,10 @@ const PRODUCTS_PER_CATEGORY = 3;
         padding: var(--space-6);
       }
     }
+
+    html {
+      scroll-behavior: smooth;
+    }
   </style>
 </head>
 
@@ -399,11 +408,14 @@ const PRODUCTS_PER_CATEGORY = 3;
           <div class="category-nav">
             <h3 class="category-nav-title">Jump to Category:</h3>
             <div class="category-links">
-              {sortedCategories.map(category => (
-                <a href={`#category-${category.toLowerCase().replace(/\s+/g, '-')}`} class="category-link">
-                  {category}
-                </a>
-              ))}
+              {sortedCategories.map(category => {
+                const anchor = `category-${slugifyCategory(category)}`;
+                return (
+                  <a href={`#${anchor}`} class="category-link">
+                    {category}
+                  </a>
+                );
+              })}
             </div>
           </div>
         )}
@@ -417,73 +429,76 @@ const PRODUCTS_PER_CATEGORY = 3;
 
       {!errorMessage && sortedCategories.length > 0 && (
         <div class="categories-grid">
-          {sortedCategories.map(category => (
-            <div class="category-section" id={`category-${category.toLowerCase().replace(/\s+/g, '-')}`}>
-              <div class="category-header">
-                <h2 class="category-title">{category}</h2>
-                <div class="category-meta">
-                  <span class="category-count">{productsByCategory[category].length} product{productsByCategory[category].length !== 1 ? 's' : ''}</span>
-                  {productsByCategory[category].length > PRODUCTS_PER_CATEGORY && (
-                    <a href={`/category/${category.toLowerCase().replace(/\s+/g, '-')}`} class="view-all-link">
-                      View All →
-                    </a>
-                  )}
+          {sortedCategories.map(category => {
+            const sectionId = `category-${slugifyCategory(category)}`;
+            return (
+              <div class="category-section" id={sectionId}>
+                <div class="category-header">
+                  <h2 class="category-title">{category}</h2>
+                  <div class="category-meta">
+                    <span class="category-count">{productsByCategory[category].length} product{productsByCategory[category].length !== 1 ? 's' : ''}</span>
+                    {productsByCategory[category].length > PRODUCTS_PER_CATEGORY && (
+                      <a href={`/category/${slugifyCategory(category)}`} class="view-all-link">
+                        View All →
+                      </a>
+                    )}
+                  </div>
                 </div>
-              </div>
-              
-              <div class="products-grid">
-                {productsByCategory[category].slice(0, PRODUCTS_PER_CATEGORY).map(product => (
-                  <div class="product-card">
-                    <a 
-                      href={product.fields['Affiliate URL']}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="product-image-wrapper-link"
-                    >
-                      <div class="product-image-wrapper">
-                        <img 
-                          src={product.fields['Image URL'] || 'https://via.placeholder.com/280x200/e2e8f0/64748b?text=📦+Product'}
-                          alt={product.fields.Title}
-                          class="product-image"
-                          loading="lazy"
-                          onerror="this.onerror=null; this.src='https://via.placeholder.com/280x200/e2e8f0/64748b?text=📦+Product';"
-                        />
-                      </div>
-                    </a>
-                    
-                    <div class="product-content">
+                
+                <div class="products-grid">
+                  {productsByCategory[category].slice(0, PRODUCTS_PER_CATEGORY).map(product => (
+                    <div class="product-card">
                       <a 
                         href={product.fields['Affiliate URL']}
                         target="_blank"
                         rel="noopener noreferrer"
-                        style="text-decoration: none; color: inherit;"
+                        class="product-image-wrapper-link"
                       >
-                        <h3 class="product-title">{product.fields.Title}</h3>
+                        <div class="product-image-wrapper">
+                          <img 
+                            src={product.fields['Image URL'] || 'https://via.placeholder.com/280x200/e2e8f0/64748b?text=📦+Product'}
+                            alt={product.fields.Title}
+                            class="product-image"
+                            loading="lazy"
+                            onerror="this.onerror=null; this.src='https://via.placeholder.com/280x200/e2e8f0/64748b?text=📦+Product';"
+                          />
+                        </div>
                       </a>
-                      <p class="product-description">{product.fields.Description}</p>
                       
-                      <div class="product-actions">
+                      <div class="product-content">
                         <a 
                           href={product.fields['Affiliate URL']}
                           target="_blank"
                           rel="noopener noreferrer"
-                          class="btn btn-primary"
+                          style="text-decoration: none; color: inherit;"
                         >
-                          🛒 Buy on Amazon
+                          <h3 class="product-title">{product.fields.Title}</h3>
                         </a>
-                        <a 
-                          href={`/products/${product.fields.Slug}`}
-                          class="btn btn-secondary"
-                        >
-                          Details
-                        </a>
+                        <p class="product-description">{product.fields.Description}</p>
+                        
+                        <div class="product-actions">
+                          <a 
+                            href={product.fields['Affiliate URL']}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="btn btn-primary"
+                          >
+                            🛒 Buy on Amazon
+                          </a>
+                          <a 
+                            href={`/products/${product.fields.Slug}`}
+                            class="btn btn-secondary"
+                          >
+                            Details
+                          </a>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

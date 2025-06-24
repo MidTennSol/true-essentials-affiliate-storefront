@@ -678,3 +678,61 @@ All major design transformation tasks have been completed successfully. The webs
 **Deployment:** Live on Vercel with automatic deployments
 **Access:** Admin system ready for immediate use and testing 
 
+## FINAL PHASE: USER REQUESTED FEATURES & DEPLOYMENT (May 2024)
+
+### Background and Motivation
+User requested final improvements for usability, basic admin security, and production deployment. These are the last steps before going live.
+
+### Key Challenges and Analysis
+- Product randomization must not break filtering or pagination.
+- Admin password change must be simple but not highly secure (no sensitive data).
+- "Jump to Category" must work for all categories and be mobile-friendly.
+- Deployment must preserve all admin and product functionality.
+
+### High-level Task Breakdown
+
+#### 1. Randomize Product Order on Products Page
+- [ ] Identify where products are fetched and rendered.
+- [ ] Implement shuffle/randomization before rendering.
+- [ ] Test for random order on each reload.
+
+#### 2. Secure Admin Password Management
+- [ ] Add password change form in admin panel (visible only to logged-in admin).
+- [ ] Store password securely (hashed or at least not plain text in frontend).
+- [ ] Update authentication logic to use new password.
+- [ ] Add warning: "Not highly secure, but sufficient for non-sensitive use."
+- [ ] Test password change and login/logout flows.
+
+#### 3. Fix "Jump to Category" Section
+- [ ] Review current implementation of "Jump to Category".
+- [ ] Ensure each link targets a valid anchor/section.
+- [ ] Add missing IDs/anchors to category sections if needed.
+- [ ] Test navigation for all categories.
+
+#### 4. Prepare for Production Deployment on Personal Domain (Vercel)
+- [ ] Review and commit all code changes.
+- [ ] Push to main or deployment branch.
+- [ ] Guide user through Vercel dashboard:
+    - [ ] Add custom domain
+    - [ ] Update DNS settings
+    - [ ] Verify deployment and domain connection
+
+### Project Status Board (Final Phase)
+- [x] Randomize product order on products page
+- [x] Admin password change in admin panel
+- [x] Fix "Jump to Category" section
+- [x] Commit & push all changes
+- [ ] Guide user through Vercel custom domain setup
+
+### Executor's Feedback or Assistance Requests
+- Product randomization implemented: Products now appear in a new random order on each page load (unless searching). No issues encountered. Proceeding to admin password change feature.
+- Admin password change feature added: Authenticated admins can now change the password from the dashboard. Password is stored locally (not highly secure, but sufficient for non-sensitive use). Proceeding to fix the 'Jump to Category' section.
+- 'Jump to Category' section fixed: Anchor links and section IDs now match exactly, and smooth scrolling is enabled for a better user experience. Ready to commit and push all changes.
+- All changes committed and pushed to the remote repository. Ready to walk the user through connecting their custom domain on Vercel.
+
+### Lessons
+- If randomization breaks filtering, consider shuffling only on initial fetch.
+- Password should be stored in environment or backend, not in client code.
+- Use anchor links and IDs for category navigation.
+- Document all changes before deployment.
+

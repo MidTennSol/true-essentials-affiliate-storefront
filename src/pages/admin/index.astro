@@ -3,32 +3,61 @@
 // Admin dashboard - password protected
 import { getAllProducts } from '../../lib/airtable.js';
 import Header from '../../components/Header.astro';
+import fs from 'fs';
+import path from 'path';
 
-// Get environment variables
-const adminPassword = import.meta.env.ADMIN_PASSWORD || 'letmein';
+// Path to store the admin password (for demo, not highly secure)
+const passwordFilePath = path.resolve('./admin-password.txt');
+
+// Helper to read password from file or fallback to env/default
+function getStoredPassword() {
+  try {
+    if (fs.existsSync(passwordFilePath)) {
+      return fs.readFileSync(passwordFilePath, 'utf-8').trim();
+    }
+  } catch (e) {}
+  return import.meta.env.ADMIN_PASSWORD || 'letmein';
+}
+
+// Helper to write new password to file
+function setStoredPassword(newPassword) {
+  fs.writeFileSync(passwordFilePath, newPassword, 'utf-8');
+}
+
+let adminPassword = getStoredPassword();
 
 // Initialize variables
 let errorMessage = null;
 
-// Handle POST request for login
+// Handle POST request for login or password change
 if (Astro.request.method === 'POST') {
   const formData = await Astro.request.formData();
-  const password = formData.get('password');
-  
-  if (password === adminPassword) {
-    // Set session cookie
-    Astro.cookies.set('admin_auth', 'authenticated', {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 24, // 24 hours
-      path: '/'
-    });
-    
-    // Redirect to prevent form resubmission
-    return Astro.redirect('/admin');
+  if (formData.get('change_password')) {
+    // Password change form submitted
+    const current = formData.get('current_password');
+    const next = formData.get('new_password');
+    if (current === adminPassword && next && next.length >= 8) {
+      setStoredPassword(next);
+      adminPassword = next;
+      errorMessage = 'Password changed successfully!';
+    } else {
+      errorMessage = 'Current password incorrect or new password too short (min 8 chars).';
+    }
   } else {
-    errorMessage = 'Invalid password. Please try again.';
+    // Login form
+    const password = formData.get('password');
+    if (password === adminPassword) {
+      Astro.cookies.set('admin_auth', 'authenticated', {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'strict',
+        maxAge: 60 * 60 * 24, // 24 hours
+        path: '/'
+      });
+      return Astro.redirect('/admin');
+    } else {
+      errorMessage = 'Invalid password. Please try again.';
+    }
   }
 }
 
@@ -184,6 +213,23 @@ if (Astro.url.searchParams.get('logout') === 'true') {
         </div>
 
         <p>Welcome to the admin dashboard! Use the buttons above to manage your product catalog.</p>
+        <hr>
+        <h2 style="margin-top:2rem;">🔑 Change Admin Password</h2>
+        <p style="color:#555; margin-bottom:1rem;">Change your admin password below. This is for basic protection only. Do not use for sensitive data. Password is stored locally and not highly secure.</p>
+        <form method="POST" style="max-width:400px; margin-bottom:2rem;">
+          <div class="form-group">
+            <label for="current_password">Current Password:</label>
+            <input type="password" id="current_password" name="current_password" required placeholder="Current password" />
+          </div>
+          <div class="form-group">
+            <label for="new_password">New Password:</label>
+            <input type="password" id="new_password" name="new_password" required minlength="8" placeholder="New password (min 8 chars)" />
+          </div>
+          <button type="submit" class="btn" name="change_password" value="1">Change Password</button>
+        </form>
+        {errorMessage && (
+          <div class="error">{errorMessage}</div>
+        )}
       </div>
     )}
     </div>

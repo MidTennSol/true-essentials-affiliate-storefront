@@ -103,6 +103,8 @@ try {
     filteredProducts = searchProducts(allProducts, searchQuery);
   } else {
     filteredProducts = allProducts;
+    // Randomize product order on each page load
+    filteredProducts = filteredProducts.sort(() => Math.random() - 0.5);
   }
   
   // Calculate pagination
@@ -870,7 +872,7 @@ try {
           {searchQuery && <span> matching "{searchQuery}"</span>}
         </div>
 
-        <div class="products-grid">
+        <div class="products-grid" id="productsGrid">
           {products.map((product) => (
             <div class="product-card">
               <a 
@@ -1042,5 +1044,25 @@ try {
   </main>
 
   <Footer />
+
+  {/* Client-side product shuffling for random order on every page load */}
+  <script type="text/javascript">
+    (function() {
+      // Only shuffle if not searching (search input is empty)
+      var urlParams = new URLSearchParams(window.location.search);
+      if (!urlParams.get('search')) {
+        var grid = document.getElementById('productsGrid');
+        if (grid) {
+          var cards = Array.from(grid.children);
+          for (let i = cards.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [cards[i], cards[j]] = [cards[j], cards[i]];
+          }
+          // Remove all and re-append in shuffled order
+          cards.forEach(card => grid.appendChild(card));
+        }
+      }
+    })();
+  </script>
 </body>
 </html> 
