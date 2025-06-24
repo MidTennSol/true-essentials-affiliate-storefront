@@ -1,4 +1,5 @@
 ---
+// Vercel redeploy trigger: no-op comment
 // @ts-nocheck
 // Admin dashboard - password protected
 import { getAllProducts } from '../../lib/airtable.js';
@@ -24,7 +25,9 @@ function setStoredPassword(newPassword) {
   fs.writeFileSync(passwordFilePath, newPassword, 'utf-8');
 }
 
-let adminPassword = getStoredPassword();
+// Remove file-based password logic and helpers
+// Only use environment variable for admin password
+const adminPassword = import.meta.env.ADMIN_PASSWORD || 'letmein';
 
 // Initialize variables
 let errorMessage = null;
@@ -38,7 +41,6 @@ if (Astro.request.method === 'POST') {
     const next = formData.get('new_password');
     if (current === adminPassword && next && next.length >= 8) {
       setStoredPassword(next);
-      adminPassword = next;
       errorMessage = 'Password changed successfully!';
     } else {
       errorMessage = 'Current password incorrect or new password too short (min 8 chars).';
@@ -215,21 +217,9 @@ if (Astro.url.searchParams.get('logout') === 'true') {
         <p>Welcome to the admin dashboard! Use the buttons above to manage your product catalog.</p>
         <hr>
         <h2 style="margin-top:2rem;">🔑 Change Admin Password</h2>
-        <p style="color:#555; margin-bottom:1rem;">Change your admin password below. This is for basic protection only. Do not use for sensitive data. Password is stored locally and not highly secure.</p>
-        <form method="POST" style="max-width:400px; margin-bottom:2rem;">
-          <div class="form-group">
-            <label for="current_password">Current Password:</label>
-            <input type="password" id="current_password" name="current_password" required placeholder="Current password" />
-          </div>
-          <div class="form-group">
-            <label for="new_password">New Password:</label>
-            <input type="password" id="new_password" name="new_password" required minlength="8" placeholder="New password (min 8 chars)" />
-          </div>
-          <button type="submit" class="btn" name="change_password" value="1">Change Password</button>
-        </form>
-        {errorMessage && (
-          <div class="error">{errorMessage}</div>
-        )}
+        <div style="color:#555; margin-bottom:1rem;">
+          <strong>To change the admin password, update the <code>ADMIN_PASSWORD</code> environment variable in your Vercel dashboard and redeploy.</strong>
+        </div>
       </div>
     )}
     </div>
