@@ -95,12 +95,21 @@ export async function getAllProducts(): Promise<AirtableProduct[]> {
     const notion     = getClient();
     const databaseId = getDatabaseId();
 
-    const response = await notion.databases.query({
-      database_id: databaseId,
-      sorts: [{ timestamp: 'created_time', direction: 'descending' }],
-    });
+    const allResults: any[] = [];
+    let cursor: string | undefined = undefined;
 
-    return response.results.map(pageToProduct).filter(p => p.fields.Title);
+    do {
+      const response = await notion.databases.query({
+        database_id: databaseId,
+        start_cursor: cursor,
+        page_size:    100,
+        sorts: [{ timestamp: 'created_time', direction: 'descending' }],
+      });
+      allResults.push(...response.results);
+      cursor = response.has_more ? response.next_cursor ?? undefined : undefined;
+    } while (cursor);
+
+    return allResults.map(pageToProduct).filter(p => p.fields.Title);
   } catch (error) {
     console.error('Error fetching products from Notion:', error);
     throw new Error('Failed to fetch products: ' + String(error));
