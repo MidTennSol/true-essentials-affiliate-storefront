@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { getAllProducts, updateProduct } from '../../lib/airtable.ts';
+import { getAllProducts, updateProduct } from '../../lib/notion.ts';
 import { categorizeProduct, AVAILABLE_CATEGORIES } from '../../lib/categorize.js';
 
 export const POST: APIRoute = async ({ request }) => {

@@ -88,11 +88,11 @@ if (Astro.request.method === 'POST') {
               imageUrl = `https://m.media-amazon.com/images/I/${asin}._AC_SL500_.jpg`; // Fallback
             }
 
-            // Save to Airtable
-            let airtableResult;
+            // Save to notion
+            let notionResult;
             try {
-              const { createProduct } = await import('../../lib/airtable');
-              airtableResult = await createProduct({
+              const { createProduct } = await import('../../lib/notion');
+              notionResult = await createProduct({
                 title: productContent.title,
                 description: productContent.description,
                 affiliateUrl: affiliateUrl,
@@ -106,11 +106,11 @@ if (Astro.request.method === 'POST') {
                 title: productContent.title,
                 imageUrl: imageUrl,
                 status: 'success',
-                airtableId: airtableResult.id
+                notionId: notionResult.id
               });
               
               console.log(`✅ Successfully processed: ${productContent.title}`);
-            } catch (airtableError) {
+            } catch (notionError) {
               failed++;
               processedResults.push({
                 url: amazonUrl,
@@ -118,10 +118,10 @@ if (Astro.request.method === 'POST') {
                 title: productContent.title,
                 imageUrl: imageUrl,
                 status: 'error',
-                error: String(airtableError)
+                error: String(notionError)
               });
               
-              console.warn(`❌ Airtable save failed for ${asin}:`, airtableError);
+              console.warn(`❌ notion save failed for ${asin}:`, notionError);
             }
             
           } catch (err) {
@@ -429,7 +429,7 @@ Paste one URL per line..."
         <li><strong>ASIN Extraction:</strong> Extract product identifiers from each URL</li>
         <li><strong>Content Generation:</strong> Generate titles and descriptions for each product</li>
         <li><strong>Affiliate Conversion:</strong> Convert to affiliate URLs with your tag</li>
-        <li><strong>Batch Import:</strong> Add all products to Airtable in one operation</li>
+        <li><strong>Batch Import:</strong> Add all products to notion in one operation</li>
       </ol>
       
       <p><strong>Coming Soon:</strong></p>

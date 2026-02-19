@@ -1,7 +1,7 @@
 ---
 // Edit existing product - password protected
 import Header from '../../components/Header.astro';
-import { getProductById, updateProduct, getAllProducts } from '../../lib/airtable';
+import { getProductById, updateProduct, getAllProducts } from '../../lib/notion';
 
 const isAuthenticated = Astro.cookies.get('admin_auth')?.value === 'authenticated';
 if (!isAuthenticated) {

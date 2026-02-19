@@ -10,8 +10,8 @@ if (!isAuthenticated) {
 }
 
 let connectionTest = {
-  airtableApiKey: null as string | null,
-  airtableBaseId: null as string | null,
+  notionApiKey: null as string | null,
+  notionBaseId: null as string | null,
   connectionStatus: 'Not tested',
   errorMessage: null as string | null,
   products: [] as any[],
@@ -21,12 +21,12 @@ let connectionTest = {
 
 try {
   // Check environment variables
-  connectionTest.airtableApiKey = import.meta.env.AIRTABLE_API_KEY ? 'Set' : 'Missing';
-  connectionTest.airtableBaseId = import.meta.env.AIRTABLE_BASE_ID ? 'Set' : 'Missing';
+  connectionTest.notionApiKey = import.meta.env.notion_API_KEY ? 'Set' : 'Missing';
+  connectionTest.notionBaseId = import.meta.env.notion_BASE_ID ? 'Set' : 'Missing';
   
   // Test connection
-  if (import.meta.env.AIRTABLE_API_KEY && import.meta.env.AIRTABLE_BASE_ID) {
-    const { getAllProducts, testConnection, createProduct } = await import('../../lib/airtable');
+  if (import.meta.env.notion_API_KEY && import.meta.env.notion_BASE_ID) {
+    const { getAllProducts, testConnection, createProduct } = await import('../../lib/notion');
     
     const isConnected = await testConnection();
     
@@ -40,7 +40,7 @@ try {
       try {
         const testProduct = {
           title: 'TEST PRODUCT - DELETE ME',
-          description: 'This is a test product created to verify Airtable write permissions. Safe to delete.',
+          description: 'This is a test product created to verify notion write permissions. Safe to delete.',
           imageUrl: 'https://via.placeholder.com/300x300?text=TEST',
           affiliateUrl: 'https://amazon.com/test'
         };
@@ -60,7 +60,7 @@ try {
     }
   } else {
     connectionTest.connectionStatus = 'Missing Config';
-    connectionTest.errorMessage = 'AIRTABLE_API_KEY or AIRTABLE_BASE_ID is missing';
+    connectionTest.errorMessage = 'notion_API_KEY or notion_BASE_ID is missing';
   }
 } catch (error) {
   connectionTest.connectionStatus = 'Error';
@@ -73,7 +73,7 @@ try {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Test Airtable Connection - True Essentials Admin</title>
+  <title>Test notion Connection - True Essentials Admin</title>
   <style>
     body {
       font-family: 'Inter', system-ui, sans-serif;
@@ -227,8 +227,8 @@ try {
   <main>
     <div class="admin-header">
       <div class="container">
-        <h1 class="admin-title">Airtable Connection Test</h1>
-        <p class="admin-subtitle">Diagnose Airtable API configuration issues</p>
+        <h1 class="admin-title">notion Connection Test</h1>
+        <p class="admin-subtitle">Diagnose notion API configuration issues</p>
       </div>
     </div>
 
@@ -241,15 +241,15 @@ try {
         <div class="status-grid">
           <div class="status-item">
             <div class="status-label">API Key</div>
-            <div class={`status-value ${connectionTest.airtableApiKey === 'Set' ? 'status-success' : 'status-error'}`}>
-              {connectionTest.airtableApiKey}
+            <div class={`status-value ${connectionTest.notionApiKey === 'Set' ? 'status-success' : 'status-error'}`}>
+              {connectionTest.notionApiKey}
             </div>
           </div>
           
           <div class="status-item">
             <div class="status-label">Base ID</div>
-            <div class={`status-value ${connectionTest.airtableBaseId === 'Set' ? 'status-success' : 'status-error'}`}>
-              {connectionTest.airtableBaseId}
+            <div class={`status-value ${connectionTest.notionBaseId === 'Set' ? 'status-success' : 'status-error'}`}>
+              {connectionTest.notionBaseId}
             </div>
           </div>
           
@@ -290,7 +290,7 @@ try {
         {connectionTest.createTestResult && (
           <div style="background: #dcfce7; color: #166534; padding: 1rem; border-radius: 0.5rem; border: 1px solid #bbf7d0; margin-top: 1rem;">
             <strong>✅ Create Test Success:</strong> Successfully created test product with ID: {connectionTest.createTestResult.id}
-            <br><small>Note: This test product was created in your Airtable. You can safely delete it.</small>
+            <br><small>Note: This test product was created in your notion. You can safely delete it.</small>
           </div>
         )}
 
@@ -312,16 +312,16 @@ try {
       <div class="test-section">
         <h2 class="section-title">Troubleshooting Guide</h2>
         
-        {connectionTest.airtableApiKey === 'Missing' && (
+        {connectionTest.notionApiKey === 'Missing' && (
           <div class="error-message">
-            <strong>Missing API Key:</strong> Add AIRTABLE_API_KEY to your .env file. Get it from 
-            <a href="https://airtable.com/developers/web/api/introduction" target="_blank">Airtable Developer Hub</a>.
+            <strong>Missing API Key:</strong> Add notion_API_KEY to your .env file. Get it from 
+            <a href="https://notion.com/developers/web/api/introduction" target="_blank">notion Developer Hub</a>.
           </div>
         )}
         
-        {connectionTest.airtableBaseId === 'Missing' && (
+        {connectionTest.notionBaseId === 'Missing' && (
           <div class="error-message">
-            <strong>Missing Base ID:</strong> Add AIRTABLE_BASE_ID to your .env file. Find it in your Airtable base URL.
+            <strong>Missing Base ID:</strong> Add notion_BASE_ID to your .env file. Find it in your notion base URL.
           </div>
         )}
         
@@ -340,7 +340,7 @@ try {
               <li>Required fields are missing in the table structure</li>
               <li>Field names don't match exactly (case-sensitive)</li>
             </ul>
-            <strong>Recommended fix:</strong> Check your Airtable base permissions and ensure the table has these exact fields:
+            <strong>Recommended fix:</strong> Check your notion base permissions and ensure the table has these exact fields:
             <code style="background: #f3f4f6; padding: 0.25rem; border-radius: 0.25rem;">Title, Description, Image URL, Affiliate URL, Category, Slug, Created At</code>
           </div>
         )}

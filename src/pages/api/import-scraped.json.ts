@@ -37,7 +37,7 @@ export const POST: APIRoute = async ({ request }) => {
     console.log(`📥 Received ${data.products.length} products from Python scraper`);
 
     // Import Airtable functions
-    const { createProduct } = await import('../../lib/airtable');
+    const { createProduct } = await import('../../lib/notion');
     
     const results = [];
     let successful = 0;

@@ -19,12 +19,12 @@ let results = {
 
 try {
   // Check environment variables
-  results.hasApiKey = !!import.meta.env.AIRTABLE_API_KEY;
-  results.hasBaseId = !!import.meta.env.AIRTABLE_BASE_ID;
+  results.hasApiKey = !!import.meta.env.notion_API_KEY;
+  results.hasBaseId = !!import.meta.env.notion_BASE_ID;
   
   if (results.hasApiKey && results.hasBaseId) {
     // Test connection
-    const { testConnection, createProduct } = await import('../../lib/airtable');
+    const { testConnection, createProduct } = await import('../../lib/notion');
     
     results.canConnect = await testConnection();
     
@@ -59,7 +59,7 @@ try {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Simple Airtable Test</title>
+  <title>Simple notion Test</title>
   <style>
     body {
       font-family: system-ui, sans-serif;
@@ -114,7 +114,7 @@ try {
   <div class="container">
     <a href="/admin" class="back-btn">← Back to Admin</a>
     
-    <h1>🔧 Simple Airtable Test</h1>
+    <h1>🔧 Simple notion Test</h1>
     
     <div class={`result ${results.hasApiKey ? 'success' : 'error'}`}>
       <strong>API Key:</strong> {results.hasApiKey ? '✅ Found' : '❌ Missing'}
@@ -135,7 +135,7 @@ try {
     {results.testProductId && (
       <div class="result success">
         <strong>Test Product Created:</strong> ID {results.testProductId}
-        <br><small>You can safely delete this from your Airtable</small>
+        <br><small>You can safely delete this from your notion</small>
       </div>
     )}
     
@@ -148,7 +148,7 @@ try {
     
     <h2>What This Means:</h2>
     <ul>
-      <li><strong>If all green ✅:</strong> Airtable is working perfectly</li>
+      <li><strong>If all green ✅:</strong> notion is working perfectly</li>
       <li><strong>If Create Test fails ❌:</strong> There's a permission or field issue</li>
       <li><strong>If Connection fails ❌:</strong> Wrong API key or Base ID</li>
     </ul>

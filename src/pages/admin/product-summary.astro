@@ -1,7 +1,7 @@
 ---
 // Product summary showing which products need attention
 import Header from '../../components/Header.astro';
-import { getAllProducts } from '../../lib/airtable';
+import { getAllProducts } from '../../lib/notion';
 
 const isAuthenticated = Astro.cookies.get('admin_auth')?.value === 'authenticated';
 if (!isAuthenticated) {

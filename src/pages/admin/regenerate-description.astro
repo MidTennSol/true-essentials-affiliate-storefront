@@ -1,6 +1,6 @@
 ---
 // Regenerate description for a product using enhanced AI
-import { getProductById, updateProduct } from '../../lib/airtable';
+import { getProductById, updateProduct } from '../../lib/notion';
 import { generateEnhancedDescription } from '../../lib/content';
 
 const isAuthenticated = Astro.cookies.get('admin_auth')?.value === 'authenticated';

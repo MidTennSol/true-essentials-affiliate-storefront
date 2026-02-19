@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@astrojs/vercel": "^8.0.4",
+    "@notionhq/client": "^2.2.15",
     "airtable": "^0.12.2",
     "astro": "^5.9.1",
     "dotenv": "^16.4.7",
